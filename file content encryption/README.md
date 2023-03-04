@@ -6,11 +6,12 @@
 
 Each file shall have a file header at offset 0 containing:
 
-* plaintext file signature identifying this file to be encrypted
-* file body offset
-* file key information
-* file body format (cipher mode, block size, ...)
-* tbd
+* Random 256-bit *FILE ID*
+ * This *FILE ID* **MUST** be mixed into each encrypted data block to tie that
+   block to the file. This make copying ciphertext blocks from one file
+   to another impossible.
+* **TO BE DECIDED** should the *FILE ID* be used as a per-file encryption key
+  by encrypting it with the *MASTER KEY*?
 
 ## File Body
 
