@@ -14,6 +14,12 @@ Each file shall have a file header at offset 0 containing:
 
 ## File Body
 
+General requirements:
+
+* The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
+  This makes copying ciphertext blocks from one file to the same file at another location
+  impossible.
+
 The following file body formats have been defined:
 
 | Format ID   | Description                       | Required?       |
