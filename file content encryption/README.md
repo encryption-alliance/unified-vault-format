@@ -6,7 +6,8 @@
 
 Each file shall have a file header at offset 0 containing:
 
-* plaintext file signature identifying this file to be encrypted
+* [file signature / magic bytes](https://en.wikipedia.org/wiki/List_of_file_signatures)
+  identifying this file as encrypted data acc. to this specification
 * file body offset
 * file key information
 * file body format (cipher mode, block size, ...)
