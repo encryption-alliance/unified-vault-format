@@ -5,7 +5,7 @@
 * Define a common vendor-independent standard for encrypted directories on a per-file basis
 * Discuss pros and cons of file formats and cipher choices
 * Make the format be as simple as possible and the spec as clear as possible
-  * No MAY or SHOULD in the spec if at all possible.
+  * Keep MAY or SHOULD requirements to a minimum to avoid diverging feature sets of different implementations
   * Easier implementation means fewer bugs and incompatibilities
   * Lean on the underlying file system as much as possible
 * Create testcases to verify compliance to the format
