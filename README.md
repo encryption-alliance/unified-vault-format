@@ -4,6 +4,11 @@
 ## Goals
 * Define a common vendor-independent standard for encrypted directories on a per-file basis
 * Discuss pros and cons of file formats and cipher choices
+* Make the format be as simple as possible and the spec as clear as possible
+  * Keep MAY or SHOULD requirements to a minimum to avoid diverging feature sets of different implementations
+  * Easier implementation means fewer bugs and incompatibilities
+  * Lean on the underlying file system as much as possible
+* Create testcases to verify compliance to the format
 
 ## Non-Goals
 * Invent any new ciphers or cryptographic operations
