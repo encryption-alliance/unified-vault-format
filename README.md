@@ -15,6 +15,13 @@
 * Ease migration between different file encryption applications
 * Simplify development and auditing of software
 
+## Who is supporting this?
+The standardization process is supported by some well-known FOSS products that share the common vision:
+* [Cryptomator](https://github.com/cryptomator/cryptomator)
+* [Cyberduck](https://github.com/cyberduck/)
+* [gocryptfs](https://github.com/rfjakob/gocryptfs/)
+* [rclone](https://github.com/rclone/rclone/)
+
 ## Contribute
 * :memo: Read about of [Design Requirements](Requirements.md)
 * :speech_balloon: Join our [discussions](https://github.com/cryptomator/new-encryption-format/discussions)
