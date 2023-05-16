@@ -20,7 +20,6 @@ The standardization process is supported by some well-known FOSS products that s
 * [Cryptomator](https://github.com/cryptomator/cryptomator)
 * [Cyberduck](https://github.com/cyberduck/)
 * [gocryptfs](https://github.com/rfjakob/gocryptfs/)
-* [ownCloud](https://github.com/owncloud)
 * [rclone](https://github.com/rclone/rclone/)
 
 ## Contribute
