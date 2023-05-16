@@ -1,6 +1,3 @@
-# New Encryption Format
-:warning: Temporary repo until we [found a name (please join this discussion)](https://github.com/cryptomator/new-encryption-format/discussions/3) for a new vendor-independent FOSS encryption format
-
 ## Goals
 * Define a common vendor-independent standard for encrypted directories on a per-file basis
 * Discuss pros and cons of file formats and cipher choices
