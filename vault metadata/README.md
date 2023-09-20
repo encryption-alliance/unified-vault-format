@@ -21,7 +21,7 @@ In order to comply with [RFC 7516, Section 4.2](https://datatracker.ietf.org/doc
 With this version of the UVF specification, the following registered header fields and values are supported:
 
 | JOSE Header | Allowed Values | Remark |
-|---|---|---|---|
+|---|---|---|
 | `alg` | `A256KW` | Further algorithms may be added in later revisions |
 | `enc` | `A256GCM` | Further encryption algorithms may be added in later revisions |
 | `typ` | `JWE` | |
