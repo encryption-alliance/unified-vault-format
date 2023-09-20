@@ -6,7 +6,8 @@ In order to decrypt this file, a KEK is required. Retrieval of this KEK is appli
 
 ## Filename and Location
 
-The metadata file MUST be stored in the root directory of the encrypted vault structure, so it can be applications can retrieve it from remote storage without traversing deep hierarchies. Furthermore it helps the user to understand the purpose of the directory.
+The metadata file MUST be stored in the root directory of the encrypted vault structure for applications to retrieve it from remote storage without traversing deep hierarchies. Furthermore it helps the user to understand the purpose of the directory.
+```suggestion
 
 The file SHOULD be named `vault.uvf` (_TBD_), however application vendors may decide to use custom file extensions to register the file type with their application.
 
