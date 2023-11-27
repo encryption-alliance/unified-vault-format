@@ -39,7 +39,7 @@ With this version of the UVF specification, the payload contains the following d
 
 * `fileFormat`: The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat`: The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `keys`: A map of _Vault Key ID_s and raw keys
+* `keys`: A map of _Vault Key IDs_ and raw keys
 * `latestKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows key rotation)
 * `kdf`: A (fast) KDF to stretch the vault key to the length required by the file and name format
 
