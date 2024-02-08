@@ -36,13 +36,17 @@ With this version of the UVF specification, the following registered header fiel
 
 The JWE Ciphertext decrypts to a JSON object (as denoted by the `cty` header). Any sensitive metadata MUST be added to this.
 
-With this version of the UVF specification, the payload contains the following data:
+With this version of the UVF specification, the payload MUST contain at least the following data:
 
 * `fileFormat`: The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat`: The exact format of encrypted [file names](../file%20name%20encryption/README.md)
 * `keys`: A map of _Vault Key IDs_ and raw keys
 * `latestKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows key rotation)
 * `kdf`: A (fast) KDF to stretch the vault key to the length required by the file and name format
+
+> [!IMPORTANT]
+> Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
+> Vendor-specific fields MUST use reverse domain name notation to avoid collisions.
 
 ```json
 {
@@ -55,6 +59,7 @@ With this version of the UVF specification, the payload contains the following d
     },
     "latestKey": "QBsJ",
     "kdf": "TODO",
+    "org.example.customfield": 42
 }
 ```
 
