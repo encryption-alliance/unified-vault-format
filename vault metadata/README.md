@@ -40,8 +40,9 @@ With this version of the UVF specification, the payload MUST contain at least th
 
 * `fileFormat`: The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat`: The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `keys`: A map of _Vault Key IDs_ and raw keys
-* `latestKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows key rotation)
+* `fileKeys`: A map of _Vault Key IDs_ and serialized keys used for file content encryption
+* `latestFileKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows [key rotation](key-rotation.md))
+* `nameKey`: A serialized key used for file name encryption
 * `kdf`: A (fast) KDF to stretch the vault key to the length required by the file and name format
 
 > [!IMPORTANT]
@@ -52,12 +53,13 @@ With this version of the UVF specification, the payload MUST contain at least th
 {
     "fileFormat": "AES-256-GCM-32k",
     "nameFormat": "AES-256-SIV",
-    "keys": {
+    "fileKeys": {
         "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
         "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
         "QBsJ": "Ln0sA6lQeuJl7PW1NWiFpTOTogKdJBOUmXJloaJa78Y="
     },
-    "latestKey": "QBsJ",
+    "latestFileKey": "QBsJ",
+    "nameKey": "QzlGMkUwMjgtRTQ0Qy00Q0RBLUE5MzktMDZFQTk0RDAt=",
     "kdf": "TODO",
     "org.example.customfield": 42
 }
