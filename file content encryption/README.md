@@ -7,19 +7,17 @@
 Each file shall have a file header at offset 0 containing:
 
 * 8 bytes general header fields:
-  * 3 byte: ASCII `uvf` [file signature / magic bytes](https://en.wikipedia.org/wiki/List_of_file_signatures)
-    identifying this file as encrypted data acc. to this specification
+  * 3 byte: ASCII `uvf` (big-endian) [file signature / magic bytes](https://en.wikipedia.org/wiki/List_of_file_signatures)
+    identifying this file as encrypted data according to this specification
   * 1 byte: uvf spec version (0-255)
   * 4 byte: _Vault Key ID_
-* _Format_-specific metadata (_Format_-specific length, specified in vault metadata)
-    * e.g. file key
+* n bytes of _Format_-specific metadata (number of bytes depends on _Format_)
+    * e.g. IVs
     * ...
-
-Both, the _Vault Key ID_ as well as the file's _Format_ is fixed-per-vault and defined in the [vault metadata file](../vault%20metadata/README.md).
 
 ## File Formats
 
-File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` properties.
+File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` field.
 
 The following file body formats have been defined:
 
