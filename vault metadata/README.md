@@ -2,7 +2,8 @@
 
 Each vault contains one vault metadata file, which holds essential information like encryption parameters.
 
-In order to decrypt this file, a KEK is required. Retrieval of this KEK is application-specific and the workflow is not part of this spec.
+> [!NOTE]
+> In order to decrypt this file, a KEK is required. Retrieval of this KEK is application-specific and the workflow is not part of this spec.
 
 ## Filename and Location
 
