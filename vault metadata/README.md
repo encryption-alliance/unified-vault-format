@@ -38,12 +38,12 @@ The JWE Ciphertext decrypts to a JSON object (as denoted by the `cty` header). A
 
 With this version of the UVF specification, the payload MUST contain at least the following data:
 
-* `fileFormat`: The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
-* `nameFormat`: The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `fileKeys`: A map of _Vault Key IDs_ and serialized keys used for file content encryption
+* `fileFormat` (immutable): The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
+* `nameFormat` (immutable): The exact format of encrypted [file names](../file%20name%20encryption/README.md)
+* `keys`: A map of _Vault Key IDs_ and serialized vault keys
 * `latestFileKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows [key rotation](key-rotation.md))
-* `nameKey`: A serialized key used for file name encryption
-* `kdf`: A (fast) KDF to stretch the vault key to the length required by the file and name format
+* `nameKey` (immutable): The _Vault Key ID_ of the key used to encrypt file names (will not change during key rotation)
+* `kdf` (immutable): A (fast) KDF to derive keys from the vault key with the length required according to `fileFormat` and `nameFormat`
 
 > [!IMPORTANT]
 > Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
@@ -53,13 +53,13 @@ With this version of the UVF specification, the payload MUST contain at least th
 {
     "fileFormat": "AES-256-GCM-32k",
     "nameFormat": "AES-256-SIV",
-    "fileKeys": {
+    "keys": {
         "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
         "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
         "QBsJ": "Ln0sA6lQeuJl7PW1NWiFpTOTogKdJBOUmXJloaJa78Y="
     },
     "latestFileKey": "QBsJ",
-    "nameKey": "QzlGMkUwMjgtRTQ0Qy00Q0RBLUE5MzktMDZFQTk0RDAt=",
+    "nameKey": "HDm3",
     "kdf": "TODO",
     "org.example.customfield": 42
 }
