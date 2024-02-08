@@ -3,7 +3,7 @@
 Each vault contains one vault metadata file, which holds essential information like encryption parameters.
 
 > [!NOTE]
-> In order to decrypt this file, a KEK is required. Retrieval of this KEK is application-specific and the workflow is not part of this spec.
+> In order to decrypt this file, a _KEK_ is required. Retrieval of this _KEK_ is application-specific and the workflow is not part of this spec. The _KEK_ MAY change any time and MUST change during [key rotation](key-rotation.md).
 
 The vault metadata file is the entry point for vault access, as it contains the vault keys that all subsequent cryptographic operations depend upon:
 
