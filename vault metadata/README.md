@@ -52,7 +52,7 @@ With this version of the UVF specification, the following registered header fiel
 | `alg` | `A256KW` | Further algorithms may be added in later revisions |
 | `enc` | `A256GCM` | Further encryption algorithms may be added in later revisions |
 | `typ` | `JWE` | |
-| `cty` | `json`, (`application/json`) | `application/` SHOULD be omitted [as per spec](https://datatracker.ietf.org/doc/html/rfc7515.html#section-4.1.10) |
+| `cty` | `json` | `application/json` formally correct but `application/` SHOULD be omitted [as per RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515.html#section-4.1.10) |
 | `crit` | `["uvf.spec.version"]` | |
 | `uvf.spec.version` | `1` | To be increased with newer revisions of this spec |
 
