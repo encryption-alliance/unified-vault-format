@@ -4,10 +4,10 @@
 This format requires 60 additional bytes in the file header:
 
 * 12 byte nonce
-* 32 byte encrypted file key
+* 32 byte encrypted file content key
 * 16 byte tag
 
-The header needs to be encrypted using a 256 bit key derived from the vault key using KDF TODO.
+The header needs to be encrypted using a 256 bit key derived from the raw key using the KDF defined in the [vault metadata file](../vault%20metadata/README.md).
 
 ```txt
 headerKey := kdf(secret: vaultKey)

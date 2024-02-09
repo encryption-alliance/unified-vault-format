@@ -5,26 +5,26 @@ Each vault contains one vault metadata file, which holds essential information l
 > [!NOTE]
 > In order to decrypt this file, a _KEK_ is required. Retrieval of this _KEK_ is application-specific and the workflow is not part of this spec. The _KEK_ MAY change any time and MUST change during [key rotation](key-rotation.md).
 
-The vault metadata file is the entry point for vault access, as it contains the vault keys that all subsequent cryptographic operations depend upon:
+The vault metadata file is the entry point for vault access, as it contains the keys that all subsequent cryptographic operations depend upon:
 
 ```mermaid
 flowchart TB
     subgraph JWE [vault.uvf]
-        v0[Vault Key 0]
-        v1[Vault Key 1]
-        v2[Vault Key 2]
+        k0[Raw Key 0]
+        k1[Raw Key 1]
+        k2[Raw Key 2]
     end
     KEK -->|decrypt| JWE
 
-    v0 -->|kdf| k0[File Name Key]
-    v1 -->|kdf| k1[File Key 1]
-    v2 -->|kdf| k2[File Key 2]
+    k0 -->|kdf| nk0[File Name Key]
+    k1 -->|kdf| fk1[File Key\n Revision 1]
+    k2 -->|kdf| fk2[File Key\n Revision 2]
 
-    k0 -->|decrypt| n[File Names]
+    nk0 -->|decrypt| n[File Names]
 
-    k1 -->|decrypt| h1[File Header 1]
-    k1 -->|decrypt| h2[File Header 2]
-    k2 -->|decrypt| h3[File Header 3]
+    fk1 -->|decrypt| h1[File Header 1]
+    fk1 -->|decrypt| h2[File Header 2]
+    fk2 -->|decrypt| h3[File Header 3]
 
     h1 -->|decrypt| b1[File Body 1]
     h2 -->|decrypt| b2[File Body 2]
@@ -66,10 +66,10 @@ With this version of the UVF specification, the payload MUST contain at least th
 
 * `fileFormat` (immutable): The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat` (immutable): The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `keys`: A map of _Vault Key IDs_ and serialized vault keys
-* `latestFileKey`: The _Vault Key ID_ of the key to use for newly added data (adding new keys allows [key rotation](key-rotation.md))
-* `nameKey` (immutable): The _Vault Key ID_ of the key used to encrypt file names (will not change during key rotation)
-* `kdf` (immutable): A (fast) KDF to derive keys from the vault key with the length required according to `fileFormat` and `nameFormat`
+* `keys`: A map of _Key IDs_ and serialized raw keys
+* `latestFileKey`: The _Key ID_ of the raw key used to derive a file key for newly added files (changing it allows [key rotation](key-rotation.md))
+* `nameKey` (immutable): The _Key ID_ of the raw key used to encrypt file names (will not change during key rotation)
+* `kdf` (immutable): A (fast) KDF to derive purpose-built keys from the raw keys. The key length depends on `fileFormat` and `nameFormat`
 
 > [!IMPORTANT]
 > Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
@@ -92,14 +92,5 @@ With this version of the UVF specification, the payload MUST contain at least th
 ```
 
 ### Example / Test Data
-
-
-```mermaid
-flowchart TD
-    U[fa:fa-user User] -->|enter credentials| 1(fa:fa-key Derive KEK)
-    1 --> 2(Decrypt JWE)
-    F[fa:fa-file vault.uvf] --> 2
-    2 --> 3(fa:fa-key Use Vault Keys)
-```
 
 TODO: add example JWE and KEK
