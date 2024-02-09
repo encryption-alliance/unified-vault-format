@@ -66,7 +66,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 
 * `fileFormat` (immutable): The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat` (immutable): The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `keys`: A map of _Key IDs_ and serialized raw keys
+* `keys` (append-only): A map of _Key IDs_ and serialized raw keys
 * `latestFileKey`: The _Key ID_ of the raw key used to derive a file key for newly added files (changing it allows [key rotation](key-rotation.md))
 * `nameKey` (immutable): The _Key ID_ of the raw key used to encrypt file names (will not change during key rotation)
 * `kdf` (immutable): A (fast) KDF to derive purpose-built keys from the raw keys. The key length depends on `fileFormat` and `nameFormat`
