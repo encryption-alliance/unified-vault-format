@@ -19,17 +19,20 @@ Each file shall have a file header at offset 0 containing:
 
 File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` field.
 
-The following file body formats have been defined:
+The following file body formats have been defined and MUST be supported by conforming applications:
 
-| Format ID                         | Description                       | Required?       |
-|-----------------------------------|-----------------------------------|-----------------|
-| [AES-256-GCM-32k](AES-256-GCM.md#32k) | AES-GCM-encrypted blocks of 32kiB | Since version 1 |
-| ... | ... | ... |
+| Format ID                         | Description                       |
+|-----------------------------------|-----------------------------------|
+| [AES-256-GCM-32k](AES-256-GCM.md#32k) | AES-GCM-encrypted blocks of 32kiB |
+| ... | ... |
+
+> [!NOTE]
+> Future versions of this standard might add further formats or deprecate existing ones. Existing formats MUST NOT be changed while keeping the same ID, though.
 
 
-### General requirements:
+### General requirements
 
-All formats must fulfil the following requirements
+All current and future formats must fulfil the following requirements:
 
 * The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
   This makes copying ciphertext blocks from one file to the same file at another location
