@@ -1,7 +1,7 @@
 # File Content Encryption using AES-256-GCM
 
 ## Format-specific file header fields
-This format requires 60 additional bytes in the file header:
+Following the [_general header_ fields](README.md), this format requires 60 additional bytes for its _format-specific header_ fields:
 
 * 12 byte nonce
 * 32 byte encrypted file content key
