@@ -69,7 +69,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 * `keys` (append-only): A map of _Key IDs_ and serialized raw keys
 * `latestFileKey`: The _Key ID_ of the raw key used to derive a file key for newly added files (changing it allows [key rotation](key-rotation.md))
 * `nameKey` (immutable): The _Key ID_ of the raw key used to encrypt file names (will not change during key rotation)
-* `kdf` (immutable): A (fast) KDF to derive purpose-built keys from the raw keys. The key length depends on `fileFormat` and `nameFormat`
+* `kdf` (immutable): A (fast) [KDF](../kdf/README.md) to derive purpose-built subkeys from the raw keys. The key length depends on `fileFormat` and `nameFormat`
 
 > [!IMPORTANT]
 > Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
@@ -88,7 +88,7 @@ With this version of the UVF specification, the payload MUST contain at least th
     },
     "latestFileKey": "QBsJ",
     "nameKey": "HDm3",
-    "kdf": "TODO",
+    "kdf": "1STEP-HMAC-SHA512",
     "org.example.customfield": 42
 }
 ```
