@@ -19,7 +19,7 @@ Each file shall have a file header at offset 0 containing:
 
 File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` field.
 
-The following file body formats have been defined and MUST be supported by conforming applications:
+This is an exhaustive list of file body formats that have been defined in this version of the specification and MUST be supported by conforming applications:
 
 | Format ID                         | Description                       |
 |-----------------------------------|-----------------------------------|

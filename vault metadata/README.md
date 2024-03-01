@@ -74,6 +74,8 @@ With this version of the UVF specification, the payload MUST contain at least th
 > [!IMPORTANT]
 > Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
 > Vendor-specific fields MUST use reverse domain name notation to avoid collisions.
+>
+> If `fileFormat`, `nameFormat`, or `kdf` values are not defined in the version of this specification denoted by `uvf.spec.version`, it violates the specification, requiring the application to halt processing.
 
 ```json
 {
