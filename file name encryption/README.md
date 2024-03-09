@@ -1,11 +1,23 @@
 # File Name Encryption
 
-:warning: this is a working draft
+## Approved File Name Formats
 
-| Format ID | Description | Pros | Cons |
+File name formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `nameFormat` field.
+
+This is an exhaustive list of file name formats that have been defined in this version of the specification and MUST be supported by conforming applications:
+
+| Format ID | Description | Benefits | Restrictions |
 |---|---|---|---|
-| NONE | Don't encrypt file names, just append a file extension | no issues | :warning: no privacy |
-| AES-SIV-BASE64URL | Encrypt using AES-SIV, then base64url-encode | no fancy characters | 16 byte overhead<br>4/3 expansion |
-| AES-SIV-BASE32-CI | Encrypt using AES-SIV, then base32-encode, apply case information on encoded ciphertext | no fancy characters<br>case-insensitive | :warning: leaks case information <br>16 byte overhead<br>8/5 expansion |
-| AES-SIV-BASE4K | Encrypt using AES-SIV, then base4k-encode | short file names (in terms of chars) | 16 bytes overhead<br>unicode required |
+| [AES-SIV-512-B64URL](AES-SIV-512-B64URL.md) | encrypt using AES-SIV, then base64url-encode file name | just ASCII characters | 16 byte overhead<br>4/3 expansion |
+
+## Possible Future Formats
+
+> [!NOTE]
+> Future versions of this standard might add further formats or deprecate existing ones. Existing formats MUST NOT be changed while keeping the same ID, though.
+
+| Format ID | Description | Benefits | Restrictions |
+|---|---|---|---|
+| NONE | No file name encryption, just file extensions | - | no confidentiality |
+| AES-SIV-512-B32-CI | encrypt using AES-SIV, then base32-encode, apply case information on encoded ciphertext | just ASCII characters<br>case-insensitive | :warning: leaks case information <br>16 byte overhead<br>8/5 expansion |
+| AES-SIV-512-B4K | encrypt using AES-SIV, then base4k-encode | short file names (using multi-byte chars) | 16 bytes overhead<br>unicode required |
 | ... | ... | ... | ... |
