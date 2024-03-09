@@ -90,7 +90,7 @@ With this version of the UVF specification, the payload MUST contain at least th
     "latestFileKey": "QBsJ",
     "nameKey": "HDm3",
     "kdf": "HKDF-SHA512",
-    "salt": "NIlr89R7FhochyP4yuXZmDqCnQ0dBB3UZ2D+6oiIjr8="
+    "salt": "NIlr89R7FhochyP4yuXZmDqCnQ0dBB3UZ2D+6oiIjr8=",
     "org.example.customfield": 42
 }
 ```
