@@ -1,7 +1,7 @@
 # Key Derivation Functions
 
 The KDF is used to
-1. derive subkeys from the vault's raw keys, which are stored in the `keys` field of the [vault metadata file](../vault%20metadata/README.md),
+1. derive subkeys from the vault's seeds, which are stored in the `seeds` field of the [vault metadata file](../vault%20metadata/README.md),
 2. expand these subkeys to meet the length requirements for specific algorithms, or
 3. deterministically derive other high-entropy data such as salts or IVs
 

@@ -5,26 +5,26 @@ Each vault contains one vault metadata file, which holds essential information l
 > [!NOTE]
 > In order to decrypt this file, a _KEK_ is required. Retrieval of this _KEK_ is application-specific and the workflow is not part of this spec. The _KEK_ MAY change any time and MUST change during [key rotation](key-rotation.md).
 
-The vault metadata file is the entry point for vault access, as it contains the keys that all subsequent cryptographic operations depend upon:
+The vault metadata file is the entry point for vault access, as it contains the material required to derive the keys that all subsequent cryptographic operations depend upon:
 
 ```mermaid
 flowchart TB
     subgraph JWE [vault.uvf]
-        k0[Raw Key 0]
-        k1[Raw Key 1]
-        k2[Raw Key 2]
+        s0[Seed 0]
+        s1[Seed 1]
+        s2[Seed 2]
     end
     KEK -->|decrypt| JWE
 
-    k0 -->|kdf| nk0[File Name Key]
-    k1 -->|kdf| fk1[File Key\n Revision 1]
-    k2 -->|kdf| fk2[File Key\n Revision 2]
+    s0 -->|kdf| k0[File Name Key]
+    s1 -->|kdf| k1[File Key\n Revision 1]
+    s2 -->|kdf| k2[File Key\n Revision 2]
 
-    nk0 -->|decrypt| n[File Names]
+    k0 -->|decrypt| n[File Names]
 
-    fk1 -->|decrypt| h1[File Header 1]
-    fk1 -->|decrypt| h2[File Header 2]
-    fk2 -->|decrypt| h3[File Header 3]
+    k1 -->|decrypt| h1[File Header 1]
+    k1 -->|decrypt| h2[File Header 2]
+    k2 -->|decrypt| h3[File Header 3]
 
     h1 -->|decrypt| b1[File Body 1]
     h2 -->|decrypt| b2[File Body 2]
@@ -66,10 +66,10 @@ With this version of the UVF specification, the payload MUST contain at least th
 
 * `fileFormat` (immutable): The exact file format of each [encrypted file](../file%20content%20encryption/README.md)
 * `nameFormat` (immutable): The exact format of encrypted [file names](../file%20name%20encryption/README.md)
-* `keys` (append-only): A map of _Key IDs_ and serialized raw keys
-* `latestFileKey`: The _Key ID_ of the raw key used to derive a file key for newly added files (changing it allows [key rotation](key-rotation.md))
-* `nameKey` (immutable): The _Key ID_ of the raw key used to encrypt file names (will not change during key rotation)
-* `kdf` (immutable): A (fast) [KDF](../kdf/README.md) to derive purpose-built subkeys from the raw keys. The key length depends on `fileFormat` and `nameFormat`
+* `seeds` (append-only): A map of _Key IDs_ and pre key material
+* `latestFileKey`: The _Key ID_ of the seed used to derive a file key for newly added files (changing it allows [key rotation](key-rotation.md))
+* `nameKey` (immutable): The _Key ID_ of the seed used to encrypt file names (will not change during key rotation)
+* `kdf` (immutable): A (fast) [KDF](../kdf/README.md) to derive purpose-built subkeys from the seeds. The key length depends on `fileFormat` and `nameFormat`
 * `salt` (immutable): A 32 byte random value for salted computations, particularly the [KDF](../kdf/README.md) which can be used to generate further salts or IVs, avoiding reuse.
 
 > [!IMPORTANT]
@@ -82,7 +82,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 {
     "fileFormat": "AES-256-GCM-32k",
     "nameFormat": "AES-256-SIV",
-    "keys": {
+    "seeds": {
         "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
         "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
         "QBsJ": "Ln0sA6lQeuJl7PW1NWiFpTOTogKdJBOUmXJloaJa78Y="
