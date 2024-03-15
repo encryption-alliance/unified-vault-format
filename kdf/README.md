@@ -6,7 +6,7 @@ The KDF is used to
 3. deterministically derive other high-entropy data such as salts or IVs
 
 > [!WARNING]
-> The KDFs listed below MAY be unsuitable for low-entropy inputs and MUST NOT be hard to compute. Therefore they must only be used for the aforementioned intended use cases, where the input guaranteed to be a high-entropy, uniformly random secret key.
+> The KDFs listed below MAY be unsuitable for low-entropy inputs and MUST NOT be hard to compute. Therefore they must only be used for the aforementioned intended use cases, where the input is guaranteed to be a high-entropy, uniformly random secret key.
 
 ## Usage
 
