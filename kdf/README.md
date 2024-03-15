@@ -12,7 +12,7 @@ The KDF is used to
 
 In the context of this specification `kdf()` is a ternary function with the following three parameters:
 * an input key
-* a output length in bytes
+* an output length in bytes
 * an optional context
 
 Other parameters, such as the internally used hash function, are constant and defined during vault creation.
