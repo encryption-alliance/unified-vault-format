@@ -6,13 +6,13 @@ The KDF is used to
 3. deterministically derive other high-entropy data such as salts or IVs
 
 > [!WARNING]
-> The KDFs listed below MAY be unsuitable for low-entropy inputs and MUST NOT be hard to compute. Therefore they must only be used for the aforementioned intended use cases, where the input guaranteed to be a high-entropy, uniformly random secret key.
+> The KDFs listed below MAY be unsuitable for low-entropy inputs and MUST NOT be hard to compute. Therefore they must only be used for the aforementioned intended use cases, where the input is guaranteed to be a high-entropy, uniformly random secret key.
 
 ## Usage
 
 In the context of this specification `kdf()` is a ternary function with the following three parameters:
 * an input key
-* a output length in bytes
+* an output length in bytes
 * an optional context
 
 Other parameters, such as the internally used hash function, are constant and defined during vault creation.
