@@ -2,7 +2,7 @@
 
 ## Derive Required Keys
 
-All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the raw name key as denoted by the `nameKey` and pass it through the [KDF](../kdf/README.md):
+All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the seed for file name encryption as denoted by the `nameKey` and pass it through the [KDF](../kdf/README.md):
 
 ```txt
 sivKey := kdf(secret: nameKey, len: 64, context: "siv")
