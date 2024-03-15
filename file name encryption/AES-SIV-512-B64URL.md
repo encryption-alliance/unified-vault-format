@@ -66,8 +66,8 @@ Depending on the kind of node, the encrypted name is then either used to create 
 
 * Files are stored as files.
 * Non-files are stored as directories. The type of the node then depends on this directory's content.
-    * Directories are denoted by a file called `dir.uvf` containing aforementioned directory ID.
-    * Symlinks are denoted by a file called `symlink.uvf` containing the encrypted link target.
+    * Directories are denoted by a file called `_dir.uvf` containing aforementioned directory ID.
+    * Symlinks are denoted by a file called `_symlink.uvf` containing the encrypted link target.
     * Further types may be appended in future releases.
 
 Thus, for a given cleartext directory structure like this...
@@ -89,23 +89,23 @@ Thus, for a given cleartext directory structure like this...
 └─ d
    ├─ BZ
    │  └─ R4VZSS5PEF7TU3PMFIMON5GJRNBDWA     # Root Directory
-   │     ├─ dir.uvf                         # Root Directory's dirId
+   │     ├─ _dir.uvf                        # Root Directory's dirId
    │     ├─ 5TyvCyF255sRtfrIv83ucADQ.uvf    # File.txt
    │     ├─ FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf # Subdirectory
-   │     │  └─ dir.uvf                      # Subdirectory's dirId
+   │     │  └─ _dir.uvf                     # Subdirectory's dirId
    │     └─ gLeOGMCN358UBf2Qk9cWCQl.uvf     # Symlink
-   │        └─ symlink.uvf                  # Symlink's target
+   │        └─ _symlink.uvf                 # Symlink's target
    ├─ FC
    │  └─ ZKZRLZUODUUYTYA4457CSBPZXB5A77     # Subdirectory
-   │     ├─ dir.uvf                         # Subdirectory's dirId
+   │     ├─ _dir.uvf                        # Subdirectory's dirId
    |     └─ ...                             # Subdirectory's children
    └─ ...
 ```
 
-## Format of `dir.uvf` and `symlink.uvf`
+## Format of `_dir.uvf` and `_symlink.uvf`
 
-Both, `dir.uvf` and `symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault. The file header MUST reference the same seed ID that is used for file name encryption.
+Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault. The file header MUST reference the same seed ID that is used for file name encryption.
 
-The cleartext content of `dir.uvf` is the 32 byte dirId.
+The cleartext content of `_dir.uvf` is the 32 byte dirId.
 
-The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
+The cleartext content of `_symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
