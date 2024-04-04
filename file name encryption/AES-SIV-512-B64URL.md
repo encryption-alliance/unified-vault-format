@@ -126,3 +126,35 @@ Thus, for a given cleartext directory structure like this...
    |     └─ ...                             # Subdirectory's children
    └─ ...
 ```
+
+### Traversing the Example Directory Structure
+
+#### List contents of `/`:
+
+1. compute `rootDirId` and corresponding ciphertext dir path -> `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA`
+2. list direct children within `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA`
+    * `_dir.uvf` (file)
+    * `5TyvCyF255sRtfrIv83ucADQ.uvf` (file)
+    * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` (dir)
+    * `gLeOGMCN358UBf2Qk9cWCQl.uvf` (dir)
+3. For each subdirectory, determine node type
+    * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` denotes a dir (contains `_dir.uvf`)
+    * `gLeOGMCN358UBf2Qk9cWCQl.uvf` denotes a symlink (contains `_symlink.uvf`)
+4. strip file extension and decrypt file names
+    * `File.txt`
+    * `Subdirectory`
+    * `Symlink`
+
+#### List contents of `/Subdirectory/`:
+
+1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf/_dir.uvf`
+2. read `dirId` from said file and compute ciphertext path -> `d/FC/ZKZRLZUODUUYTYA4457CSBPZXB5A77`
+3. Repeat dir listing procedure for `d/FC/ZKZRLZUODUUYTYA4457CSBPZXB5A77`
+
+#### Read target of `/Symlink`:
+
+1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/gLeOGMCN358UBf2Qk9cWCQl.uvf/_symlink.uvf`
+
+#### Read content of `/File.txt`:
+
+1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/5TyvCyF255sRtfrIv83ucADQ.uvf`
