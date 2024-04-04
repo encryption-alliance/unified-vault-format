@@ -79,6 +79,20 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 | directory           | directory containing `_dir.uvf`     |
 | symlink             | directory containing `_symlink.uvf` |
 
+### Format of `_dir.uvf` and `_symlink.uvf`
+
+Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault.
+
+> [!IMPORTANT]
+> The file header MUST reference the seed denoted by `nameKey`, as key rotation does not apply to file names.
+
+The cleartext content of `_dir.uvf` is the 32 byte dirId.
+
+The cleartext content of `_symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
+
+> [!CAUTION]
+> Every `*.uvf` file MUST be encrypted independently, particularly the two `_dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
+
 ### Example Directory Structure
 
 Thus, for a given cleartext directory structure like this...
@@ -112,17 +126,3 @@ Thus, for a given cleartext directory structure like this...
    |     └─ ...                             # Subdirectory's children
    └─ ...
 ```
-
-## Format of `_dir.uvf` and `_symlink.uvf`
-
-Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault.
-
-> [!IMPORTANT]
-> The file header MUST reference the seed denoted by `nameKey`, as key rotation does not apply to file names.
-
-The cleartext content of `_dir.uvf` is the 32 byte dirId.
-
-The cleartext content of `_symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
-
-> [!CAUTION]
-> Every `*.uvf` file MUST be encrypted independently, particularly the two `_dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
