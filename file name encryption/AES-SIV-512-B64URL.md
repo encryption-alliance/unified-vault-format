@@ -2,11 +2,11 @@
 
 ## Derive Required Keys
 
-All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the seed for file name encryption as denoted by the `nameKey` and pass it through the [KDF](../kdf/README.md):
+All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the seed for file name encryption as denoted by the `firstSeed` and pass it through the [KDF](../kdf/README.md):
 
 ```txt
-sivKey := kdf(secret: nameKey, len: 64, context: "siv")
-hmacKey := kdf(secret: nameKey, len: 32, context: "hmac")
+sivKey := kdf(secret: firstSeed, len: 64, context: "siv")
+hmacKey := kdf(secret: firstSeed, len: 32, context: "hmac")
 ```
 
 ## Directory IDs
@@ -17,10 +17,10 @@ Every directory has a unique _directory ID_, which is defined to be a sequence o
 dirId = csprng(len: 32)
 ```
 
-The only exception to this is the root directory ID, which depends on the `nameKey`:
+The only exception to this is the root directory ID, which depends on the `firstSeed`:
 
 ```txt
-rootDirId := kdf(secret: nameKey, len: 32, context: "rootDirId")
+rootDirId := kdf(secret: firstSeed, len: 32, context: "rootDirId")
 ```
 
 The directory ID is stored in two places:
@@ -81,10 +81,7 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 
 ### Format of `_dir.uvf` and `_symlink.uvf`
 
-Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault.
-
-> [!IMPORTANT]
-> The file header MUST reference the seed denoted by `nameKey`, as key rotation does not apply to file names.
+Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
 
 The cleartext content of `_dir.uvf` is the 32 byte dirId.
 
