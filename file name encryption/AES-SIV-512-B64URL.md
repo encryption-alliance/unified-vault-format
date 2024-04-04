@@ -11,7 +11,7 @@ hmacKey := kdf(secret: nameKey, len: 32, context: "hmac")
 
 ## Directory IDs
 
-Every directory has a unique _directory ID_, which is defined to be a sequence of 32 random bytes (collision probability is therefore 2^-128). Directory IDs are immutable and therefore linked with a directory eternally, surviving renames or moves of said directory.
+Every directory has a unique _directory ID_, which is defined to be a sequence of 32 random bytes (taking the birthday paradox into account, collision probability is therefore 2^-128). Directory IDs are immutable and therefore linked with a directory eternally, surviving renames/moves.
 
 ```txt
 dirId = csprng(len: 32)
@@ -23,7 +23,11 @@ The only exception to this is the root directory ID, which depends on the `nameK
 rootDirId := kdf(secret: nameKey, len: 32, context: "rootDirId")
 ```
 
-The dirId
+The directory ID is stored in two places:
+1. Within the parent dir (except for root), where it serves a link to the child dir
+2. In the child dir itself (allowing disaster recovery without the parent)
+
+The exact file structure to store the dir ID will be discussed in more detail below.
 
 ## Mapping Directory IDs to Paths
 
@@ -38,6 +42,9 @@ dirIdHash := hmacSha256(data: dirId, key: hmacKey)
 dirIdString := base32(dirIdHash)
 dirPath := vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 ```
+
+> [!NOTE]
+> Due to the nature of hierarchical data structures, travering file trees is an inherently top-down process, allowing the use of one-way hash functions.
 
 > [!TIP]
 > Splitting the `dirIdString` into a path like `d/AB/CDEFGHIJKLMNOPQRSTUVWXYZ234567` is inspired by Cryptomator's former vault formats and serves two purposes:
@@ -62,13 +69,17 @@ ciphertextName := base64url(data: ciphertext) + '.uvf'
 
 ## Ciphertext Directory Structure
 
-Depending on the kind of node, the encrypted name is then either used to create a file or a directory:
+### Node Types
 
-* Files are stored as files.
-* Non-files are stored as directories. The type of the node then depends on this directory's content.
-    * Directories are denoted by a file called `_dir.uvf` containing aforementioned directory ID.
-    * Symlinks are denoted by a file called `_symlink.uvf` containing the encrypted link target.
-    * Further types may be appended in future releases.
+Depending on the kind of a cleartext node, the encrypted name is then either used to create a file or a directory:
+
+| cleartext node type | ciphertext structure                |
+|---------------------|-------------------------------------|
+| file                | file                                |
+| directory           | directory containing `_dir.uvf`     |
+| symlink             | directory containing `_symlink.uvf` |
+
+### Example Directory Structure
 
 Thus, for a given cleartext directory structure like this...
 
@@ -104,8 +115,14 @@ Thus, for a given cleartext directory structure like this...
 
 ## Format of `_dir.uvf` and `_symlink.uvf`
 
-Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault. The file header MUST reference the same seed ID that is used for file name encryption.
+Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the content encryption mechanism configured for the vault.
+
+> [!IMPORTANT]
+> The file header MUST reference the seed denoted by `nameKey`, as key rotation does not apply to file names.
 
 The cleartext content of `_dir.uvf` is the 32 byte dirId.
 
 The cleartext content of `_symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
+
+> [!CAUTION]
+> Every `*.uvf` file MUST be encrypted independently, particularly the two `_dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
