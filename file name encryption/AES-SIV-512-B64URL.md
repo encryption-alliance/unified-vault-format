@@ -76,19 +76,19 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 | cleartext node type | ciphertext structure                |
 |---------------------|-------------------------------------|
 | file                | file                                |
-| directory           | directory containing `_dir.uvf`     |
-| symlink             | directory containing `_symlink.uvf` |
+| directory           | directory containing `dir.uvf`      |
+| symlink             | directory containing `symlink.uvf`  |
 
-### Format of `_dir.uvf` and `_symlink.uvf`
+### Format of `dir.uvf` and `symlink.uvf`
 
-Both, `_dir.uvf` and `_symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
+Both, `dir.uvf` and `symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
 
-The cleartext content of `_dir.uvf` is the 32 byte dirId.
+The cleartext content of `dir.uvf` is the 32 byte dirId.
 
-The cleartext content of `_symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
+The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
 
 > [!CAUTION]
-> Every `*.uvf` file MUST be encrypted independently, particularly the two `_dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
+> Every `*.uvf` file MUST be encrypted independently, particularly the two `dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
 
 ### Example Directory Structure
 
@@ -111,15 +111,15 @@ Thus, for a given cleartext directory structure like this...
 └─ d
    ├─ BZ
    │  └─ R4VZSS5PEF7TU3PMFIMON5GJRNBDWA     # Root Directory
-   │     ├─ _dir.uvf                        # Root Directory's dirId
+   │     ├─ dir.uvf                         # Root Directory's dirId
    │     ├─ 5TyvCyF255sRtfrIv83ucADQ.uvf    # File.txt
    │     ├─ FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf # Subdirectory
-   │     │  └─ _dir.uvf                     # Subdirectory's dirId
+   │     │  └─ dir.uvf                      # Subdirectory's dirId
    │     └─ gLeOGMCN358UBf2Qk9cWCQl.uvf     # Symlink
-   │        └─ _symlink.uvf                 # Symlink's target
+   │        └─ symlink.uvf                  # Symlink's target
    ├─ FC
    │  └─ ZKZRLZUODUUYTYA4457CSBPZXB5A77     # Subdirectory
-   │     ├─ _dir.uvf                        # Subdirectory's dirId
+   │     ├─ dir.uvf                         # Subdirectory's dirId
    |     └─ ...                             # Subdirectory's children
    └─ ...
 ```
@@ -130,13 +130,13 @@ Thus, for a given cleartext directory structure like this...
 
 1. compute `rootDirId` and corresponding ciphertext dir path -> `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA`
 2. list direct children within `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA`
-    * `_dir.uvf` (file)
+    * `dir.uvf` (file)
     * `5TyvCyF255sRtfrIv83ucADQ.uvf` (file)
     * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` (dir)
     * `gLeOGMCN358UBf2Qk9cWCQl.uvf` (dir)
 3. For each subdirectory, determine node type
-    * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` denotes a dir (contains `_dir.uvf`)
-    * `gLeOGMCN358UBf2Qk9cWCQl.uvf` denotes a symlink (contains `_symlink.uvf`)
+    * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` denotes a dir (contains `dir.uvf`)
+    * `gLeOGMCN358UBf2Qk9cWCQl.uvf` denotes a symlink (contains `symlink.uvf`)
 4. strip file extension and decrypt file names
     * `File.txt`
     * `Subdirectory`
@@ -144,13 +144,13 @@ Thus, for a given cleartext directory structure like this...
 
 #### List contents of `/Subdirectory/`:
 
-1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf/_dir.uvf`
+1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf/dir.uvf`
 2. read `dirId` from said file and compute ciphertext path -> `d/FC/ZKZRLZUODUUYTYA4457CSBPZXB5A77`
 3. Repeat dir listing procedure for `d/FC/ZKZRLZUODUUYTYA4457CSBPZXB5A77`
 
 #### Read target of `/Symlink`:
 
-1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/gLeOGMCN358UBf2Qk9cWCQl.uvf/_symlink.uvf`
+1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/gLeOGMCN358UBf2Qk9cWCQl.uvf/symlink.uvf`
 
 #### Read content of `/File.txt`:
 
