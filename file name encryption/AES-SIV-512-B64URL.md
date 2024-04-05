@@ -1,12 +1,12 @@
 # File Name Encryption using AES-SIV-512 + Base64-URL-Encoding
 
-## Derive Required Keys
+## Deriving Keys for File Name Encryption
 
-All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the seed for file name encryption as denoted by the `firstSeed` and pass it through the [KDF](../kdf/README.md):
+All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. So the first step is to look up the seed for file name encryption as denoted by the `initialSeed` and pass it through the [KDF](../kdf/README.md):
 
 ```txt
-sivKey := kdf(secret: firstSeed, len: 64, context: "siv")
-hmacKey := kdf(secret: firstSeed, len: 32, context: "hmac")
+sivKey := kdf(secret: initialSeed, len: 64, context: "siv")
+hmacKey := kdf(secret: initialSeed, len: 32, context: "hmac")
 ```
 
 ## Directory IDs
@@ -17,10 +17,10 @@ Every directory has a unique _directory ID_, which is defined to be a sequence o
 dirId = csprng(len: 32)
 ```
 
-The only exception to this is the root directory ID, which depends on the `firstSeed`:
+The only exception to this is the root directory ID, which is deterministically derived from the `initialSeed`:
 
 ```txt
-rootDirId := kdf(secret: firstSeed, len: 32, context: "rootDirId")
+rootDirId := kdf(secret: initialSeed, len: 32, context: "rootDirId")
 ```
 
 The directory ID is stored in two places:
