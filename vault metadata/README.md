@@ -10,11 +10,15 @@ The vault metadata file is the entry point for vault access, as it contains the 
 ```mermaid
 flowchart TB
     subgraph JWE [vault.uvf]
-        s0[Seed 0]
-        s1[Seed 1]
-        s2[Seed 2]
+        subgraph Payload [Encrypted Content]
+            s0[Seed 0]
+            s1[Seed 1]
+            s2[Seed 2]
+        end
+        CEK -->|decrypt| Payload
     end
-    KEK -->|decrypt| JWE
+    vk1[Vault Key 1<br><small>e.g. password-derived</small>] -->|decapsulate| CEK
+    vk2[Vault Key 2<br><small>e.g. user's private key</small>] -->|decapsulate| CEK
 
     s0 -->|kdf| k0[File Name Key]
     s1 -->|kdf| k1[File Key\n Revision 1]
@@ -35,30 +39,75 @@ flowchart TB
 
 The metadata file MUST be stored in the root directory of the encrypted vault structure for applications to retrieve it from remote storage without traversing deep hierarchies. Furthermore, it helps the user to understand the purpose of the directory.
 
-The file SHOULD be named `vault.uvf`, however application vendors may decide to use custom names matching their brand.
+The file SHOULD be named `vault.uvf`, however application vendors may decide to use custom names matching their brand or file extensions that are registered with their applications.
 
 ## File Format
 
-The file contains a JWE in _JWE Compact Serialization_ format ([RFC 7516](https://datatracker.ietf.org/doc/html/rfc7516)), as it is an easy-to-implement, flexible, broadly-used and mature standard that allows to store arbitrary public metadata in its header as well as sensitive data in its ciphertext.
+The file is formatted in _JWE JSON Serialization_ format ([RFC 7516, Section 3.2](https://datatracker.ietf.org/doc/html/rfc7516#section-3.2)), as it is an easy-to-implement, flexible, broadly-used and mature standard that allows to store arbitrary public metadata in its header as well as sensitive data in its ciphertext.
 
-### Public Metadata
+> [!NOTE]
+> While the _JWE Compact Serialization_ is more broadly adapted, the JSON serialization is more flexible, allowing multiple distinct vault keys or even vault key types to be used in parallel.
 
-In order to comply with [RFC 7516, Section 4.2](https://datatracker.ietf.org/doc/html/rfc7516#section-4.2), any UVF-specific parameters MUST be prefixed with `uvf.`.
+### JOSE Header
 
-With this version of the UVF specification, the following registered header fields and values are supported:
+With this version of the UVF specification, the following registered header parameters are required:
 
-| JOSE Header | Allowed Values | Remark |
-|---|---|---|
-| `alg` | `A256KW` | Further algorithms may be added in later revisions |
-| `enc` | `A256GCM` | Further encryption algorithms may be added in later revisions |
-| `typ` | `JWE` | |
-| `cty` | `json` | `application/json` formally correct but `application/` SHOULD be omitted [as per RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515.html#section-4.1.10) |
-| `crit` | `["uvf.spec.version"]` | |
-| `uvf.spec.version` | `1` | To be increased with newer revisions of this spec |
+| Location | Header Parameter | Allowed Values | Remark |
+|---|---|---|---|
+| Per-Recipient Unprotected Header | `alg` | any | Application-dependent |
+| Per-Recipient Unprotected Header | `kid` | any, if prefixed | MUST use application-specific prefix in reverse-DNS notation |
+| Protected Header | `enc` | `A256GCM` | Further encryption algorithms may be added in future revisions |
+| Protected Header | `cty` | `json` | `application/json` formally correct but `application/` SHOULD be omitted [as per RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515.html#section-4.1.10) |
+| Protected Header | `crit` | `["uvf.spec.version"]` | |
+| Protected Header | `uvf.spec.version` | `1` | To be increased with newer revisions of this spec |
 
-`zip` MUST be omitted (disallowing compression of the plaintext)
+`zip` MUST be absent (disallowing compression of the plaintext)
 
-### Sensitive Metadata
+If required, further `alg`-specific header parameters MUST be added in the per-recipient unprotected header.
+
+> [!NOTE]
+> In order to comply with [RFC 7516, Section 4.3](https://datatracker.ietf.org/doc/html/rfc7516#section-4.3), any UVF-specific parameters, such as `uvf.spec.version` MUST be prefixed with `uvf.`.
+> 
+> Application-specific parameters MUST be prefixed accordingly, e.g. using `com.example.`.
+
+#### Example Protected Header
+
+As the current version of this specification only allows for predefined parameter values, nothing but the parameter order may change. The base64url-encoded version of the protected header should therefore always be this:
+
+```txt
+eyJlbmMiOiJBMjU2R0NNIiwiY3R5IjoianNvbiIsImNyaXQiOlsidXZmLnNwZWMudmVyc2lvbiJdLCJ1dmYuc3BlYy52ZXJzaW9uIjoxfQ
+```
+
+#### Example Per-Recipient Unprotected Header
+
+This is an example for the `recipients` section of the metadata file that contains two alternative methods that the `com.example` application employs in order to decapsulate the CEK.
+
+```json
+"recipients": [
+    {
+        "header": {
+            "alg": "PBES2-HS512+A256KW",
+            "kid": "com.example.vaultpassword",
+            "p2s": "...",
+            "p2c": "..."
+        },
+        "encrypted_key": "..."
+    },
+    {
+        "header": {
+            "alg": "ECDH-ES+A256KW",
+            "kid": "com.example.userkey.42",
+            "epk": {...}
+        },
+        "encrypted_key": "..."
+    }
+]
+```
+
+> [!TIP]
+> Applications that produce a symmetric key in any other way, e.g. using Argon2 may use `"alg": "A256KW"`. It is recommended to document how a key is produced or where it is stored in order to avoid vendor lock-ins.
+
+### Encrypted Content
 
 The JWE Ciphertext decrypts to a JSON object (as denoted by the `cty` header). Any sensitive metadata MUST be added to this.
 
@@ -83,7 +132,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 ```json
 {
     "fileFormat": "AES-256-GCM-32k",
-    "nameFormat": "AES-256-SIV",
+    "nameFormat": "AES-SIV-512-B64URL",
     "seeds": {
         "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
         "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
