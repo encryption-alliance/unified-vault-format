@@ -132,7 +132,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 ```json
 {
     "fileFormat": "AES-256-GCM-32k",
-    "nameFormat": "AES-SIV-512-B64URL",
+    "nameFormat": "AES-256-SIV",
     "seeds": {
         "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
         "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
