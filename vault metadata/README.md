@@ -134,18 +134,14 @@ With this version of the UVF specification, the payload MUST contain at least th
     "fileFormat": "AES-256-GCM-32k",
     "nameFormat": "AES-256-SIV",
     "seeds": {
-        "HDm3": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
-        "cnQp": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
-        "QBsJ": "Ln0sA6lQeuJl7PW1NWiFpTOTogKdJBOUmXJloaJa78Y="
+        "HDm38i": "ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=",
+        "gBryKw": "PiPoFgA5WUoziU9lZOGxNIu9egCI1CxKy3PurtWcAJ0=",
+        "QBsJFo": "Ln0sA6lQeuJl7PW1NWiFpTOTogKdJBOUmXJloaJa78Y="
     },
-    "latestFileKey": "QBsJ",
-    "nameKey": "HDm3",
+    "latestFileKey": "QBsJFo",
+    "nameKey": "HDm38i",
     "kdf": "HKDF-SHA512",
     "kdfSalt": "NIlr89R7FhochyP4yuXZmDqCnQ0dBB3UZ2D+6oiIjr8=",
     "org.example.customfield": 42
 }
 ```
-
-### Example / Test Data
-
-TODO: add example JWE and KEK
