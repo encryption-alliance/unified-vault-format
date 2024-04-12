@@ -11,18 +11,18 @@ This data is immutable and therefore linked with a directory eternally, survivin
 1. Within the parent dir (except for root), where it serves a link to the child dir
 2. In the child dir itself (allowing disaster recovery without the parent)
 
-The exact file structure to store the dir ID will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
+The exact file structure of `dir.uvf` will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
 
 ### Directory Seed
 
-At the time of its creation, a directory's seed is always the `latestSeed`. In case of the root directory this happens to also be the `initialSeed`.
+At creation time, a directory's seed is always the `latestSeed` as defined in the [vault metadata file](../vault%20metadata/README.md#sensitive-metadata). In case of the root directory this happens to also be the `initialSeed`.
 
 When navigating into a directory, the seed is read from the corresponding `dir.uvf`'s file header.
 
 > [!NOTE]
-> Child node names are encrypted with keys derived from their parent directory's seed. Due to the immutability, adding new child nodes to old parents will continue to use the old seed.
+> A directory's seed is used to derive encryption keys used to encrypt the directory's direct children. Since the seed is immutable, new child nodes added at a later time will use the same encryption keys as old children.
 >
-> Consequently, key rotation only affects child names of newly created directories.
+> Consequently, key rotation only affects file names of nodes added to newly created directories. Key rotation is ineffective for children added to preexisting directories.
 
 ### Directory ID
 
@@ -53,7 +53,9 @@ When traversing directories, the directory ID of a given subdirectory is process
 
 1. Compute the HMAC of the `dirId` using SHA-256 and the `hmacKey`
 1. Encoding the hash with Base32 to get a string of printable chars
-1. Constructing the directory path by resolving substrings of the encoded hash relative to the `{vaultRoot}/d/`
+1. Construct the directory path by resolving substrings of the encoded hash relative to `{vaultRoot}/d/`
+    * split of the first two characters of the encoded hash (allowing for a total of 1024 directories within the base directory)
+    * use the remaining 30 characters of the encoded hash as the second level directory
 
 ```ts
 let dirIdHash = hmacSha256(data: dirId, key: hmacKey)
@@ -78,7 +80,7 @@ The cleartext name of a node gets encoded using UTF-8 in [Normalization Form C](
 
 The byte sequence is then encrypted using AES-SIV as defined in [RFC 5297](https://tools.ietf.org/html/rfc5297). In order to bind the node to the containing directory, preventing undetected manipulation of the folder structure, the directory ID of the parent folder is used as associated data.
 
-Lastly, the ciphertext is encoded with unpadded base64url.
+Lastly, the ciphertext is encoded with unpadded base64url and a file extension is added.
 
 ```ts
 let ciphertext = aesSiv(secret: cleartextName, ad: parentDirId, key: sivKey)
@@ -101,7 +103,7 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 
 Both, `dir.uvf` and `symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
 
-The cleartext content of `dir.uvf` is the 32 byte dirId. The seed to encrypt this file's header is the directory seed.
+The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory.
 
 The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
 
@@ -129,15 +131,15 @@ Thus, for a given cleartext directory structure like this...
 └─ d
    ├─ BZ
    │  └─ R4VZSS5PEF7TU3PMFIMON5GJRNBDWA     # Root Directory
-   │     ├─ dir.uvf                         # Root Directory's dirId
+   │     ├─ dir.uvf                         # Root Directory's metadata
    │     ├─ 5TyvCyF255sRtfrIv83ucADQ.uvf    # File.txt
    │     ├─ FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf # Subdirectory
-   │     │  └─ dir.uvf                      # Subdirectory's dirId
+   │     │  └─ dir.uvf                      # Subdirectory's metadata
    │     └─ gLeOGMCN358UBf2Qk9cWCQl.uvf     # Symlink
    │        └─ symlink.uvf                  # Symlink's target
    ├─ FC
    │  └─ ZKZRLZUODUUYTYA4457CSBPZXB5A77     # Subdirectory
-   │     ├─ dir.uvf                         # Subdirectory's dirId
+   │     ├─ dir.uvf                         # Subdirectory's metadata
    |     └─ ...                             # Subdirectory's children
    └─ ...
 ```
