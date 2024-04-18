@@ -64,7 +64,7 @@ let dirPath = vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 ```
 
 > [!NOTE]
-> Due to the nature of hierarchical data structures, travering file trees is an inherently top-down process, allowing the use of one-way hash functions.
+> Due to the nature of hierarchical data structures, traversing file trees is an inherently top-down process, allowing the use of one-way hash functions.
 
 > [!TIP]
 > Splitting the `dirIdString` into a path like `d/AB/CDEFGHIJKLMNOPQRSTUVWXYZ234567` is inspired by Cryptomator's former vault formats and serves two purposes:
