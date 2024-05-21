@@ -1,7 +1,5 @@
 # File Content Encryption
 
-:warning: this is a working draft
-
 ## File Header
 
 Each file shall have a file header at offset 0 containing:
@@ -35,5 +33,5 @@ This is an exhaustive list of file body formats that have been defined in this v
 All current and future formats must fulfil the following requirements:
 
 * The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
-  This makes copying ciphertext blocks from one file to the same file at another location
-  impossible.
+  This makes copying ciphertext blocks from one file to the same file at another location impossible.
+* A zero-byte EOF block MUST be appended, if the preceding block is full (i.e. contains the maximum allowed number of bytes)
