@@ -10,7 +10,7 @@ Following the [_general header_ fields](README.md), this format requires 60 addi
 The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault%20metadata/README.md).
 
 ```txt
-headerKey := kdf(secret: latestFileKey, length: 32, context: "fileHeader")
+headerKey := kdf(secret: latestSeed, length: 32, context: "fileHeader")
 headerNonce := csprng(bytes: 12)
 fileKey := csprng(bytes: 32)
 encryptedFileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
