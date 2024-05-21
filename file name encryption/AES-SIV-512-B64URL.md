@@ -52,19 +52,25 @@ let hmacKey = kdf(secret: seed, len: 32, context: "hmac")
 When traversing directories, the directory ID of a given subdirectory is processed in three steps to determine the storage path inside the vault:
 
 1. Compute the HMAC of the `dirId` using SHA-256 and the `hmacKey`
-1. Encoding the hash with Base32 to get a string of printable chars
+1. Truncate the result. Keep the leftmost 160 bits, discard the remaining 96 bits
+1. Encoding the truncated hash with Base32 to get a string of printable chars
 1. Construct the directory path by resolving substrings of the encoded hash relative to `{vaultRoot}/d/`
     * split of the first two characters of the encoded hash (allowing for a total of 1024 directories within the base directory)
     * use the remaining 30 characters of the encoded hash as the second level directory
 
 ```ts
 let dirIdHash = hmacSha256(data: dirId, key: hmacKey)
-let dirIdString = base32(dirIdHash)
+let truncatedHash = dirIdHash[0..20]
+let dirIdString = base32(truncatedHash)
 let dirPath = vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 ```
 
 > [!NOTE]
 > Due to the nature of hierarchical data structures, traversing file trees is an inherently top-down process, allowing the use of one-way hash functions.
+>
+> Base32 is used to get a encoding that works with case insensitive file systems and limits the number of nodes within `d/` to `32^2`.
+>
+> The truncation of the hash is done to to balance sufficient collision resistance and output length (to accommodate systems that have path length limitations).
 
 > [!TIP]
 > Splitting the `dirIdString` into a path like `d/AB/CDEFGHIJKLMNOPQRSTUVWXYZ234567` is inspired by Cryptomator's former vault formats and serves two purposes:
