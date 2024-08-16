@@ -1,6 +1,7 @@
 # File Content Encryption using AES-256-GCM
 
 ## Format-specific file header fields
+
 Following the [_general header_ fields](README.md), this format requires 60 additional bytes for its _format-specific header_ fields:
 
 * 12 byte nonce
@@ -33,11 +34,9 @@ flowchart TD
     fileContentKey -->|secret:| aesGcm
     csprng12(("csprng(12)"))
     csprng12 --> headerNonce
-    headerNonce -->|nonce:|aesGcm
-    generalHeaderFields -->|ad:|aesGcm
-    
+    headerNonce -->|nonce:| aesGcm
+    generalHeaderFields -->|ad:| aesGcm
 ```
-
 
 ## File Body Encryption
 
@@ -69,10 +68,9 @@ This variant uses 32740 payload bytes per block (resulting in 32768 encrypted by
 title: File Content Encryption for AES-256-GCM-XXk format
 ---
 erDiagram
-    ENCRYPTEDFILECONTENT ||--|| GENERALHEADERFIELDS : has
-    ENCRYPTEDFILECONTENT ||--|| CUSTOMHEADERFIELDS : has
-    ENCRYPTEDFILECONTENT ||--|{ CIPHERTEXTBLOCK : "has"
-
+    ENCRYPTEDFILECONTENT ||--|| GENERALHEADERFIELDS: has
+    ENCRYPTEDFILECONTENT ||--|| CUSTOMHEADERFIELDS: has
+    ENCRYPTEDFILECONTENT ||--|{ CIPHERTEXTBLOCK: "has"
     ENCRYPTEDFILECONTENT["encrypted file content"]
 
     GENERALHEADERFIELDS["general header fields"] {
@@ -92,6 +90,4 @@ erDiagram
         byte(n) spec "n bytes encrypted payload"
         byte(16) tag "tag"
     }
-
-    
 ```
