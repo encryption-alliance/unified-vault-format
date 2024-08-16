@@ -12,10 +12,32 @@ The header needs to be encrypted using a 256 bit key derived from the seed using
 ```txt
 headerKey := kdf(secret: latestSeed, length: 32, context: "fileHeader")
 headerNonce := csprng(bytes: 12)
-fileKey := csprng(bytes: 32)
-encryptedFileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
-header := generalHeaderFields . headerNonce . encryptedFileKey . tag
+fileContentKey := csprng(bytes: 32)
+encryptedFileContentKey, tag := aesGcm(cleartext: fileContentKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
+header := generalHeaderFields . headerNonce . encryptedfileContentKey . tag
 ```
+
+```mermaid
+---
+title: Derivation of Encrypted File Content Key for AES-256-GCM-XXk format
+---
+flowchart TD
+    seed -->|seed:| kdf0
+    kdf0["kdf(seed,32,'fileHeader')"]
+    kdf0 --> headerKey
+    headerKey -->|key:| aesGcm
+    aesGcm((aesGcm))
+    aesGcm --> encryptedFileContentKey
+    csprng32(("csprng(32)"))
+    csprng32 --> fileContentKey
+    fileContentKey -->|secret:| aesGcm
+    csprng12(("csprng(12)"))
+    csprng12 --> headerNonce
+    headerNonce -->|nonce:|aesGcm
+    generalHeaderFields -->|ad:|aesGcm
+    
+```
+
 
 ## File Body Encryption
 
@@ -30,7 +52,7 @@ cleartextBlocks[] := split(data: cleartext, maxBytes: n)
 for (uint32 i = 0; i < length(cleartextBlocks); i++) {
     blockNonce := csprng(bytes: 12)
     ad := [bigEndian(i), headerNonce]
-    ciphertextBlock, tag := aesGcm(cleartext: cleartextBlocks[i], key: fileKey, nonce: blockNonce, ad: ad)
+    ciphertextBlock, tag := aesGcm(cleartext: cleartextBlocks[i], key: fileContentKey, nonce: blockNonce, ad: ad)
     ciphertextBlocks[i] := blockNonce . ciphertextBlock . tag
 }
 body := join(ciphertextBlocks[])
@@ -39,3 +61,37 @@ body := join(ciphertextBlocks[])
 ### 32k
 
 This variant uses 32740 payload bytes per block (resulting in 32768 encrypted bytes per chunk).
+
+## Overview
+
+```mermaid
+---
+title: File Content Encryption for AES-256-GCM-XXk format
+---
+erDiagram
+    ENCRYPTEDFILECONTENT ||--|| GENERALHEADERFIELDS : has
+    ENCRYPTEDFILECONTENT ||--|| CUSTOMHEADERFIELDS : has
+    ENCRYPTEDFILECONTENT ||--|{ CIPHERTEXTBLOCK : "has"
+
+    ENCRYPTEDFILECONTENT["encrypted file content"]
+
+    GENERALHEADERFIELDS["general header fields"] {
+        byte(3) fileSignature "ASCII `uvf` (big-endian) magic bytes"
+        byte(1) spec "uvf spec version (0-255)"
+        byte(4) seedId "ID of the seed used to derive the file key"
+    }
+
+    CUSTOMHEADERFIELDS["custom header fields"] {
+        byte(12) headerNonce "header nonce"
+        byte(32) encryptedFileContentKey "encrypted file content key"
+        byte(16) tag "tag for verification"
+    }
+
+    CIPHERTEXTBLOCK["cipherTextBlock[i]"] {
+        byte(12) blockNonce "block nonc"
+        byte(n) spec "n bytes encrypted payload"
+        byte(16) tag "tag"
+    }
+
+    
+```
