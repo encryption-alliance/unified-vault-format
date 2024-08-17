@@ -43,8 +43,8 @@ let rootDirId = kdf(secret: initialSeed, len: 32, context: "rootDirId")
 All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. We use the directory-specific seed from `dir.uvf` and feed it into the [KDF](../kdf/README.md):
 
 ```ts
-let sivKey = kdf(secret: seed, len: 64, context: "siv")
-let hmacKey = kdf(secret: seed, len: 32, context: "hmac")
+let sivKey = kdf(seed: seed, len: 64, context: "siv")
+let hmacKey = kdf(seed: seed, len: 32, context: "hmac")
 ```
 
 ## Mapping Directory IDs to Paths
@@ -78,6 +78,66 @@ let dirPath = vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 > 2. Having at most `32^2` subdirectories within `d`
 
 Regardless of the hierarchy of cleartext paths, ciphertext directories are always stored in a flattened structure. All directories will therefore effectively be siblings (or cousins, to be precise).
+
+```mermaid
+---
+title: Overview Mapping Directory IDs to Paths, Encryption of Directory Names and Directory Metadata
+---
+flowchart TD
+   decision{root?}
+   decision -->|n| latestSeed
+   decision -->|n| csprng32
+   decision -->|y| initialSeed
+   latestSeed --> directorySeed
+   csprng32 --> dirId
+   csprng32{{"csprng(32)"}}
+   initialSeed --> directorySeed
+   initialSeed -->|seed:| kdfRootDirId
+   kdfRootDirId{{"kdf(seed,32,'rootDirId')"}}
+   kdfRootDirId --> dirId
+   directorySeed -->|seed:| kdfSiv
+   kdfSiv{{"kdf(seed,64,'siv')"}}
+   kdfSiv --> sivKey
+   directorySeed -->|seed:| kdfHmac
+   kdfHmac{{"kdf(seed,32,'hmac')"}}
+   kdfHmac --> hmacKey
+   hmacKey -->|key:| hmacSha256
+   hmacSha256{{hmacSha256}}
+   hmacSha256 --> dirIdHash
+   dirIdHash --> truncate
+   truncate{{"_[0..20]"}}
+   truncate --> base32
+   base32{{base32}}
+   base32 --> dirIdString
+   dirIdString --> head
+   head{{"_[0..2]"}}
+   dirIdString --> tail
+   tail{{"_[2..32]"}}
+   head -->|$0:| pattern
+   tail -->|$1:| pattern
+   pattern{{"'d/'$0'/'$1"}}
+   pattern --> dirPath
+   sivKey -->|sivKey:| aesSiv
+   aesSiv{{aesSiv}}
+   parentDirId -->|ad:| aesSiv
+   clearTextName -->|secret:| aesSiv
+   aesSiv --> base64Url
+   base64Url{{base64url}}
+   base64Url --> join
+   uvf --> join
+   uvf["'.uvf'"]
+   join{{"join"}}
+   join --> ciphertextName
+   directorySeed --> concat
+   dirId --> concat
+   concat{{concat}}
+   concat -->|cleartextBlocks:| fileContentEncryption
+   fileContentEncryption{{file content encryption}}
+   directorySeed -->|seed:| fileContentEncryption
+   fileContentEncryption --> dirUvf
+   dirUvf["directory metadata dir.uvf content"]
+```
+
 
 
 ## Encryption of Node Names

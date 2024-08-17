@@ -24,15 +24,15 @@ title: Derivation of Encrypted File Content Key for AES-256-GCM-XXk format
 ---
 flowchart TD
     seed -->|seed:| kdf0
-    kdf0["kdf(seed,32,'fileHeader')"]
+    kdf0{{"kdf(seed,32,'fileHeader')"}}
     kdf0 --> headerKey
     headerKey -->|key:| aesGcm
-    aesGcm((aesGcm))
+    aesGcm{{aesGcm}}
     aesGcm --> encryptedFileContentKey
-    csprng32(("csprng(32)"))
+    csprng32{{"csprng(32)"}}
     csprng32 --> fileContentKey
     fileContentKey -->|secret:| aesGcm
-    csprng12(("csprng(12)"))
+    csprng12{{"csprng(12)"}}
     csprng12 --> headerNonce
     headerNonce -->|nonce:| aesGcm
     generalHeaderFields -->|ad:| aesGcm
