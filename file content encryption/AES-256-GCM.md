@@ -86,8 +86,8 @@ erDiagram
     }
 
     CIPHERTEXTBLOCK["cipherTextBlock[i]"] {
-        byte(12) blockNonce "block nonc"
-        byte(n) spec "n bytes encrypted payload"
+        byte(12) blockNonce "block nonce"
+        byte(n) encryptedPayload "n bytes encrypted payload"
         byte(16) tag "tag"
     }
 ```
