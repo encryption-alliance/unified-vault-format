@@ -14,8 +14,8 @@ The header needs to be encrypted using a 256 bit key derived from the seed using
 headerKey := kdf(secret: latestSeed, length: 32, context: "fileHeader")
 headerNonce := csprng(bytes: 12)
 fileKey := csprng(bytes: 32)
-encryptedfileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
-header := generalHeaderFields . headerNonce . encryptedfileKey . tag
+encryptedFileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
+header := generalHeaderFields . headerNonce . encryptedFileKey . tag
 ```
 
 ```mermaid
@@ -28,7 +28,7 @@ flowchart TD
     kdf0 --> headerKey
     headerKey -->|key:| aesGcm
     aesGcm{{aesGcm}}
-    aesGcm --> encryptedfileKey
+    aesGcm --> encryptedFileKey
     csprng32{{"csprng(32)"}}
     csprng32 --> fileKey
     fileKey -->|secret:| aesGcm
@@ -87,7 +87,7 @@ erDiagram
 
     CUSTOMHEADERFIELDS["custom header fields"] {
         byte(12) headerNonce "header nonce"
-        byte(32) encryptedfileKey "encrypted file content key"
+        byte(32) encryptedFileKey "encrypted file content key"
         byte(16) tag "tag for verification"
     }
 
