@@ -84,58 +84,55 @@ Regardless of the hierarchy of cleartext paths, ciphertext directories are alway
 title: Overview Mapping Directory IDs to Paths, Encryption of Directory Names and Directory Metadata
 ---
 flowchart TD
-   decision{root?}
-   decision -->|n| latestSeed
-   decision -->|n| csprng32
-   decision -->|y| initialSeed
-   latestSeed --> directorySeed
-   csprng32 --> dirId
-   csprng32{{"csprng(32)"}}
-   initialSeed --> directorySeed
-   initialSeed -->|secret:| kdfRootDirId
-   kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
-   kdfRootDirId --> dirId
-   directorySeed -->|secret:| kdfSiv
-   kdfSiv{{"kdf(secret,64,'siv')"}}
-   kdfSiv --> sivKey
-   directorySeed -->|secret:| kdfHmac
-   kdfHmac{{"kdf(secret,32,'hmac')"}}
-   kdfHmac --> hmacKey
-   hmacKey -->|key:| hmacSha256
-   hmacSha256{{hmacSha256}}
-   hmacSha256 --> dirIdHash
-   dirIdHash --> truncate
-   truncate{{"_[0..20]"}}
-   truncate --> base32
-   base32{{base32}}
-   base32 --> dirIdString
-   dirIdString --> head
-   head{{"_[0..2]"}}
-   dirIdString --> tail
-   tail{{"_[2..32]"}}
-   head -->|$0:| pattern
-   tail -->|$1:| pattern
-   pattern{{"'d/'$0'/'$1"}}
-   pattern --> dirPath
-   sivKey -->|sivKey:| aesSiv
-   aesSiv{{aesSiv}}
-   parentDirId -->|ad:| aesSiv
-   clearTextName -->|secret:| aesSiv
-   aesSiv --> base64Url
-   base64Url{{base64url}}
-   base64Url --> join
-   uvf --> join
-   uvf["'.uvf'"]
-   join{{"join"}}
-   join --> ciphertextName
-   directorySeed --> concat
-   dirId --> concat
-   concat{{concat}}
-   concat -->|cleartextBlocks:| fileContentEncryption
-   fileContentEncryption{{file content encryption}}
-   directorySeed -->|seed:| fileContentEncryption
-   fileContentEncryption --> dirUvf
-   dirUvf["directory metadata dir.uvf content"]
+    decision{root?}
+    decision -->|n| latestSeed
+    decision -->|n| csprng32
+    decision -->|y| initialSeed
+    latestSeed --> directorySeed
+    csprng32 --> dirId
+    csprng32{{"csprng(32)"}}
+    initialSeed --> directorySeed
+    initialSeed -->|secret:| kdfRootDirId
+    kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
+    kdfRootDirId --> dirId
+    directorySeed -->|secret:| kdfSiv
+    kdfSiv{{"kdf(secret,64,'siv')"}}
+    kdfSiv --> sivKey
+    directorySeed -->|secret:| kdfHmac
+    kdfHmac{{"kdf(secret,32,'hmac')"}}
+    kdfHmac --> hmacKey
+    hmacKey -->|key:| hmacSha256
+    hmacSha256{{hmacSha256}}
+    hmacSha256 --> dirIdHash
+    dirIdHash --> truncate
+    truncate{{"_[0..20]"}}
+    truncate --> base32
+    base32{{base32}}
+    base32 --> dirIdString
+    dirIdString --> head
+    head{{"_[0..2]"}}
+    dirIdString --> tail
+    tail{{"_[2..32]"}}
+    head -->|$0:| pattern
+    tail -->|$1:| pattern
+    pattern{{"'d/'$0'/'$1"}}
+    pattern --> dirPath
+    sivKey -->|sivKey:| aesSiv
+    aesSiv{{aesSiv}}
+    parentDirId -->|ad:| aesSiv
+    clearTextName -->|secret:| aesSiv
+    aesSiv --> base64Url
+    base64Url{{base64url}}
+    base64Url --> join
+    uvf --> join
+    uvf["'.uvf'"]
+    join{{"join"}}
+    join --> ciphertextName
+    dirId -->|cleartextBlocks:| fileContentEncryption
+    fileContentEncryption{{file content encryption}}
+    directorySeed -->|seed:| fileContentEncryption
+    fileContentEncryption --> dirUvf
+    dirUvf["directory metadata dir.uvf content"]
 ```
 
 
