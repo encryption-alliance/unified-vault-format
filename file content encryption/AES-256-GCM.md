@@ -23,8 +23,8 @@ header := generalHeaderFields . headerNonce . encryptedfileContentKey . tag
 title: Derivation of Encrypted File Content Key for AES-256-GCM-XXk format
 ---
 flowchart TD
-    seed -->|seed:| kdf0
-    kdf0{{"kdf(seed,32,'fileHeader')"}}
+    seed -->|secret:| kdf0
+    kdf0{{"kdf(secret,32,'fileHeader')"}}
     kdf0 --> headerKey
     headerKey -->|key:| aesGcm
     aesGcm{{aesGcm}}
