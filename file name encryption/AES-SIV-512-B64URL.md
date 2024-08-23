@@ -182,3 +182,86 @@ Thus, for a given cleartext directory structure like this...
 #### Read content of `/File.txt`:
 
 1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/5TyvCyF255sRtfrIv83ucADQ.uvf`
+
+## Overview
+
+### Derivation of Directory Seed and Directory ID
+```mermaid
+---
+title: Choosing a Seed and Directory ID
+---
+flowchart TD
+    subgraph "Which Seed?"
+        isRoot1{is root dir?}
+        isRoot1 -->|y| initialSeed
+        isRoot1 -->|n| isExistingDir1
+
+        isExistingDir1{is existing dir?}
+        isExistingDir1 -->|y| readSeed
+        isExistingDir1 -->|n| latestSeed
+
+        readSeed{{"read seed from `dir.uvf`"}}
+        readSeed --> dirFileSeed[seed from dir.uvf]
+    end
+
+    subgraph "Which dirId?"
+        isRoot2{is root dir?}
+        isRoot2 -->|n| isExistingDir2
+        isRoot2 -->|y| kdfRootDirId
+
+        isExistingDir2{is existing dir?}
+        isExistingDir2 -->|y| readDirId
+        isExistingDir2 -->|n| csprng32
+        
+        csprng32 --> randomDirId[random dirId]
+        csprng32{{"csprng(32)"}}
+
+        initialSeed -->|secret:| kdfRootDirId    
+        kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
+        kdfRootDirId --> rootDirId[root dirId]
+
+        readDirId{{"read dirId from `dir.uvf`"}}
+        readDirId --> dirFileId[dirId from dir.uvf]
+    end
+```
+
+### Mapping Directory IDs to Paths, Encryption of Directory Names and Directory Metadata
+```mermaid
+flowchart TD
+   directorySeed -->|secret:| kdfSiv
+   kdfSiv{{"kdf(secret,64,'siv')"}}
+   kdfSiv --> sivKey
+   directorySeed -->|secret:| kdfHmac
+   kdfHmac{{"kdf(secret,32,'hmac')"}}
+   kdfHmac --> hmacKey
+   hmacKey -->|key:| hmacSha256
+   hmacSha256{{hmacSha256}}
+   hmacSha256 --> dirIdHash
+   dirIdHash --> truncate
+   truncate{{"_[0..20]"}}
+   truncate --> base32
+   base32{{base32}}
+   base32 --> dirIdString
+   dirIdString --> head
+   head{{"_[0..2]"}}
+   dirIdString --> tail
+   tail{{"_[2..32]"}}
+   head -->|$0:| pattern
+   tail -->|$1:| pattern
+   pattern{{"d/$0/$1"}}
+   pattern --> dirPath
+   sivKey -->|sivKey:| aesSiv
+   aesSiv{{aesSiv}}
+   parentDirId -->|ad:| aesSiv
+   clearTextName -->|secret:| aesSiv
+   aesSiv --> base64Url
+   base64Url{{base64url}}
+   base64Url --> appendFileExt
+   appendFileExt{{"append '.uvf'"}}
+   appendFileExt --> ciphertextName
+   dirId -->|cleartextBlocks:| fileContentEncryption
+   fileContentEncryption{{file content encryption}}
+   directorySeed -->|seed:| fileContentEncryption
+   fileContentEncryption --> dirUvf
+   dirUvf["directory metadata dir.uvf content"]
+```
