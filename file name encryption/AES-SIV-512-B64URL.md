@@ -187,21 +187,41 @@ Thus, for a given cleartext directory structure like this...
 
 ### Derivation of Directory Seed and Directory ID
 ```mermaid
+---
+title: Choosing a Seed and Directory ID
+---
 flowchart TD
-    decision{root?}
-    decision -->|n| latestSeed
-    decision -->|n| csprng32
-    decision -->|y| initialSeed
-    latestSeed --> directorySeed
-    csprng32 --> dirId
-    csprng32{{"csprng(32)"}}
-    initialSeed --> directorySeed
-    initialSeed -->|secret:| kdfRootDirId
-    kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
-    kdfRootDirId --> dirId
-    subgraph Outputs
-        directorySeed
-        dirId
+    subgraph "Which Seed?"
+        isRoot1{is root dir?}
+        isRoot1 -->|y| initialSeed
+        isRoot1 -->|n| isExistingDir1
+
+        isExistingDir1{is existing dir?}
+        isExistingDir1 -->|y| readSeed
+        isExistingDir1 -->|n| latestSeed
+
+        readSeed{{"read seed from `dir.uvf`"}}
+        readSeed --> dirFileSeed[seed from dir.uvf]
+    end
+
+    subgraph "Which dirId?"
+        isRoot2{is root dir?}
+        isRoot2 -->|n| isExistingDir2
+        isRoot2 -->|y| kdfRootDirId
+
+        isExistingDir2{is existing dir?}
+        isExistingDir2 -->|y| readDirId
+        isExistingDir2 -->|n| csprng32
+        
+        csprng32 --> randomDirId[random dirId]
+        csprng32{{"csprng(32)"}}
+
+        initialSeed -->|secret:| kdfRootDirId    
+        kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
+        kdfRootDirId --> rootDirId[root dirId]
+
+        readDirId{{"read dirId from `dir.uvf`"}}
+        readDirId --> dirFileId[dirId from dir.uvf]
     end
 ```
 
@@ -228,7 +248,7 @@ flowchart TD
    tail{{"_[2..32]"}}
    head -->|$0:| pattern
    tail -->|$1:| pattern
-   pattern{{"'d/'$0'/'$1"}}
+   pattern{{"d/$0/$1"}}
    pattern --> dirPath
    sivKey -->|sivKey:| aesSiv
    aesSiv{{aesSiv}}
@@ -236,11 +256,9 @@ flowchart TD
    clearTextName -->|secret:| aesSiv
    aesSiv --> base64Url
    base64Url{{base64url}}
-   base64Url --> join
-   uvf --> join
-   uvf["'.uvf'"]
-   join{{"join"}}
-   join --> ciphertextName
+   base64Url --> appendFileExt
+   appendFileExt{{"append '.uvf'"}}
+   appendFileExt --> ciphertextName
    dirId -->|cleartextBlocks:| fileContentEncryption
    fileContentEncryption{{file content encryption}}
    directorySeed -->|seed:| fileContentEncryption
