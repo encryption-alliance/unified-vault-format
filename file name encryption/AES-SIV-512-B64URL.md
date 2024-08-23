@@ -79,63 +79,6 @@ let dirPath = vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 
 Regardless of the hierarchy of cleartext paths, ciphertext directories are always stored in a flattened structure. All directories will therefore effectively be siblings (or cousins, to be precise).
 
-```mermaid
----
-title: Overview Mapping Directory IDs to Paths, Encryption of Directory Names and Directory Metadata
----
-flowchart TD
-    decision{root?}
-    decision -->|n| latestSeed
-    decision -->|n| csprng32
-    decision -->|y| initialSeed
-    latestSeed --> directorySeed
-    csprng32 --> dirId
-    csprng32{{"csprng(32)"}}
-    initialSeed --> directorySeed
-    initialSeed -->|secret:| kdfRootDirId
-    kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
-    kdfRootDirId --> dirId
-    directorySeed -->|secret:| kdfSiv
-    kdfSiv{{"kdf(secret,64,'siv')"}}
-    kdfSiv --> sivKey
-    directorySeed -->|secret:| kdfHmac
-    kdfHmac{{"kdf(secret,32,'hmac')"}}
-    kdfHmac --> hmacKey
-    hmacKey -->|key:| hmacSha256
-    hmacSha256{{hmacSha256}}
-    hmacSha256 --> dirIdHash
-    dirIdHash --> truncate
-    truncate{{"_[0..20]"}}
-    truncate --> base32
-    base32{{base32}}
-    base32 --> dirIdString
-    dirIdString --> head
-    head{{"_[0..2]"}}
-    dirIdString --> tail
-    tail{{"_[2..32]"}}
-    head -->|$0:| pattern
-    tail -->|$1:| pattern
-    pattern{{"'d/'$0'/'$1"}}
-    pattern --> dirPath
-    sivKey -->|sivKey:| aesSiv
-    aesSiv{{aesSiv}}
-    parentDirId -->|ad:| aesSiv
-    clearTextName -->|secret:| aesSiv
-    aesSiv --> base64Url
-    base64Url{{base64url}}
-    base64Url --> join
-    uvf --> join
-    uvf["'.uvf'"]
-    join{{"join"}}
-    join --> ciphertextName
-    dirId -->|cleartextBlocks:| fileContentEncryption
-    fileContentEncryption{{file content encryption}}
-    directorySeed -->|seed:| fileContentEncryption
-    fileContentEncryption --> dirUvf
-    dirUvf["directory metadata dir.uvf content"]
-```
-
-
 
 ## Encryption of Node Names
 
@@ -239,3 +182,68 @@ Thus, for a given cleartext directory structure like this...
 #### Read content of `/File.txt`:
 
 1. decrypt file `d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA/5TyvCyF255sRtfrIv83ucADQ.uvf`
+
+## Overview
+
+### Derivation of Directory Seed and Directory ID
+```mermaid
+flowchart TD
+    decision{root?}
+    decision -->|n| latestSeed
+    decision -->|n| csprng32
+    decision -->|y| initialSeed
+    latestSeed --> directorySeed
+    csprng32 --> dirId
+    csprng32{{"csprng(32)"}}
+    initialSeed --> directorySeed
+    initialSeed -->|secret:| kdfRootDirId
+    kdfRootDirId{{"kdf(secret,32,'rootDirId')"}}
+    kdfRootDirId --> dirId
+    subgraph Outputs
+        directorySeed
+        dirId
+    end
+```
+
+### Mapping Directory IDs to Paths, Encryption of Directory Names and Directory Metadata
+```mermaid
+flowchart TD
+   directorySeed -->|secret:| kdfSiv
+   kdfSiv{{"kdf(secret,64,'siv')"}}
+   kdfSiv --> sivKey
+   directorySeed -->|secret:| kdfHmac
+   kdfHmac{{"kdf(secret,32,'hmac')"}}
+   kdfHmac --> hmacKey
+   hmacKey -->|key:| hmacSha256
+   hmacSha256{{hmacSha256}}
+   hmacSha256 --> dirIdHash
+   dirIdHash --> truncate
+   truncate{{"_[0..20]"}}
+   truncate --> base32
+   base32{{base32}}
+   base32 --> dirIdString
+   dirIdString --> head
+   head{{"_[0..2]"}}
+   dirIdString --> tail
+   tail{{"_[2..32]"}}
+   head -->|$0:| pattern
+   tail -->|$1:| pattern
+   pattern{{"'d/'$0'/'$1"}}
+   pattern --> dirPath
+   sivKey -->|sivKey:| aesSiv
+   aesSiv{{aesSiv}}
+   parentDirId -->|ad:| aesSiv
+   clearTextName -->|secret:| aesSiv
+   aesSiv --> base64Url
+   base64Url{{base64url}}
+   base64Url --> join
+   uvf --> join
+   uvf["'.uvf'"]
+   join{{"join"}}
+   join --> ciphertextName
+   dirId -->|cleartextBlocks:| fileContentEncryption
+   fileContentEncryption{{file content encryption}}
+   directorySeed -->|seed:| fileContentEncryption
+   fileContentEncryption --> dirUvf
+   dirUvf["directory metadata dir.uvf content"]
+```
