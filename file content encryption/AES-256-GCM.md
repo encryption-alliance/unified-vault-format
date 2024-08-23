@@ -68,10 +68,16 @@ This variant uses 32740 payload bytes per block (resulting in 32768 encrypted by
 title: File Content Encryption for AES-256-GCM-XXk format
 ---
 erDiagram
-    ENCRYPTEDFILECONTENT ||--|| GENERALHEADERFIELDS: has
-    ENCRYPTEDFILECONTENT ||--|| CUSTOMHEADERFIELDS: has
-    ENCRYPTEDFILECONTENT ||--|{ CIPHERTEXTBLOCK: "has"
-    ENCRYPTEDFILECONTENT["encrypted file content"]
+    FILE["encrypted file"]
+    FILE_HEADER["file header"]
+    FILE_BODY["encrypted body"]
+    FILE ||--|| FILE_HEADER: has
+    FILE ||--|| FILE_BODY: has
+
+    FILE_HEADER ||--|| GENERALHEADERFIELDS: has
+    FILE_HEADER ||--|| CUSTOMHEADERFIELDS: has
+
+    FILE_BODY ||--|{ CIPHERTEXTBLOCK: "consists of"
 
     GENERALHEADERFIELDS["general header fields"] {
         byte(3) fileSignature "ASCII `uvf` (big-endian) magic bytes"
