@@ -13,9 +13,9 @@ The header needs to be encrypted using a 256 bit key derived from the seed using
 ```txt
 headerKey := kdf(secret: latestSeed, length: 32, context: "fileHeader")
 headerNonce := csprng(bytes: 12)
-fileContentKey := csprng(bytes: 32)
-encryptedFileContentKey, tag := aesGcm(cleartext: fileContentKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
-header := generalHeaderFields . headerNonce . encryptedfileContentKey . tag
+fileKey := csprng(bytes: 32)
+encryptedfileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
+header := generalHeaderFields . headerNonce . encryptedfileKey . tag
 ```
 
 ```mermaid
@@ -28,10 +28,10 @@ flowchart TD
     kdf0 --> headerKey
     headerKey -->|key:| aesGcm
     aesGcm{{aesGcm}}
-    aesGcm --> encryptedFileContentKey
+    aesGcm --> encryptedfileKey
     csprng32{{"csprng(32)"}}
-    csprng32 --> fileContentKey
-    fileContentKey -->|secret:| aesGcm
+    csprng32 --> fileKey
+    fileKey -->|secret:| aesGcm
     csprng12{{"csprng(12)"}}
     csprng12 --> headerNonce
     headerNonce -->|nonce:| aesGcm
@@ -51,7 +51,7 @@ cleartextBlocks[] := split(data: cleartext, maxBytes: n)
 for (uint32 i = 0; i < length(cleartextBlocks); i++) {
     blockNonce := csprng(bytes: 12)
     ad := [bigEndian(i), headerNonce]
-    ciphertextBlock, tag := aesGcm(cleartext: cleartextBlocks[i], key: fileContentKey, nonce: blockNonce, ad: ad)
+    ciphertextBlock, tag := aesGcm(cleartext: cleartextBlocks[i], key: fileKey, nonce: blockNonce, ad: ad)
     ciphertextBlocks[i] := blockNonce . ciphertextBlock . tag
 }
 body := join(ciphertextBlocks[])
@@ -87,7 +87,7 @@ erDiagram
 
     CUSTOMHEADERFIELDS["custom header fields"] {
         byte(12) headerNonce "header nonce"
-        byte(32) encryptedFileContentKey "encrypted file content key"
+        byte(32) encryptedfileKey "encrypted file content key"
         byte(16) tag "tag for verification"
     }
 
