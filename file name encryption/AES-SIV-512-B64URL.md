@@ -9,7 +9,13 @@ Every directory requires certain metadata that affects the file name encryption 
 
 This data is immutable and therefore linked with a directory eternally, surviving renames/moves. This data is stored in a file called `dir.uvf`, which is stored in two places:
 1. Within the parent dir (except for root), where it serves a link to the child dir
-2. In the child dir itself (allowing disaster recovery without the parent)
+2. In the child dir itself (allowing disaster recovery without the parent). 
+
+
+> [!NOTE] Disaster recovery without the parent
+> Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
+> all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
+> within the lost parent dir.
 
 The exact file structure of `dir.uvf` will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
 
