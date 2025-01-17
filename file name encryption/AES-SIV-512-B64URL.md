@@ -9,7 +9,13 @@ Every directory requires certain metadata that affects the file name encryption 
 
 This data is immutable and therefore linked with a directory eternally, surviving renames/moves. This data is stored in a file called `dir.uvf`, which is stored in two places:
 1. Within the parent dir (except for root), where it serves a link to the child dir
-2. In the child dir itself (allowing disaster recovery without the parent)
+2. In the child dir itself (allowing disaster recovery without the parent). 
+
+
+> [!NOTE] Disaster recovery without the parent
+> Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
+> all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
+> within the lost parent dir.
 
 The exact file structure of `dir.uvf` will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
 
@@ -40,7 +46,7 @@ let rootDirId = kdf(secret: initialSeed, len: 32, context: "rootDirId")
 
 ## Deriving Encryption Keys
 
-All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256bit key for HMAC computations. We use the directory-specific seed from `dir.uvf` and feed it into the [KDF](../kdf/README.md):
+All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256 bit key for HMAC computations. We use the directory-specific seed from `dir.uvf` and feed it into the [KDF](../kdf/README.md):
 
 ```ts
 let sivKey = kdf(secret: seed, len: 64, context: "siv")
@@ -53,7 +59,7 @@ When traversing directories, the directory ID of a given subdirectory is process
 
 1. Compute the HMAC of the `dirId` using SHA-256 and the `hmacKey`
 1. Truncate the result. Keep the leftmost 160 bits, discard the remaining 96 bits
-1. Encoding the truncated hash with Base32 to get a string of printable chars
+1. Encode the truncated hash with Base32 to get a string of printable chars
 1. Construct the directory path by resolving substrings of the encoded hash relative to `{vaultRoot}/d/`
     * split of the first two characters of the encoded hash (allowing for a total of 1024 directories within the base directory)
     * use the remaining 30 characters of the encoded hash as the second level directory
@@ -68,7 +74,7 @@ let dirPath = vaultRoot + '/d/' + dirIdString[0..2] + '/' + dirIdString[2..32]
 > [!NOTE]
 > Due to the nature of hierarchical data structures, traversing file trees is an inherently top-down process, allowing the use of one-way hash functions.
 >
-> Base32 is used to get a encoding that works with case insensitive file systems and limits the number of nodes within `d/` to `32^2`.
+> Base32 is used to get an encoding that works with case insensitive file systems and limits the number of nodes within `d/` to `32^2`.
 >
 > The truncation of the hash is done to to balance sufficient collision resistance and output length (to accommodate systems that have path length limitations).
 
@@ -161,7 +167,7 @@ Thus, for a given cleartext directory structure like this...
     * `5TyvCyF255sRtfrIv83ucADQ.uvf` (file)
     * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` (dir)
     * `gLeOGMCN358UBf2Qk9cWCQl.uvf` (dir)
-1. For each subdirectory, determine node type
+1. for each subdirectory, determine node type
     * `FHTa55bHsUfVDbEb0gTL9hZ8nho.uvf` denotes a dir (contains `dir.uvf`)
     * `gLeOGMCN358UBf2Qk9cWCQl.uvf` denotes a symlink (contains `symlink.uvf`)
 1. strip file extension and decrypt file names

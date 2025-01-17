@@ -30,7 +30,7 @@ flowchart TB
     vk0[Vault Key 1<br><small>e.g. password-derived</small>] -->|decapsulate<br>alg: PBES2| r0
     vk1[Vault Key 2<br><small>e.g. user's private key</small>] -->|decapsulate<br>alg: ECDH| r1
     vk2[...] -->|decapsulate<br>alg: ...| r2
-    
+
 
     s0 -->|kdf| k0[Key 0]
     s0 -->|kdf| k1[Key 1]
@@ -74,12 +74,12 @@ With this version of the UVF specification, the following registered header para
 
 If required, further `alg`-specific header parameters MUST be added in the per-recipient unprotected header.
 
-> [!IMPORTANT]  
-> Even if only a single recipient exists, it MUST be added to the `recipients` array. Consequently, `alg` and `kid` MUST NOT neither be part of the `protected` nor the `unprotected` header.
+> [!IMPORTANT]
+> Even if only a single recipient exists, it MUST be added to the `recipients` array. Consequently, `alg` and `kid` MUST NOT be part of the `protected` nor the `unprotected` header.
 
 > [!NOTE]
 > In order to comply with [RFC 7516, Section 4.3](https://datatracker.ietf.org/doc/html/rfc7516#section-4.3), any UVF-specific parameters, such as `uvf.spec.version` MUST be prefixed with `uvf.`.
-> 
+>
 > Application-specific parameters MUST be prefixed accordingly, e.g. using `com.example.`.
 
 #### Example Protected Header
