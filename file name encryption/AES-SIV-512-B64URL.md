@@ -46,11 +46,11 @@ let rootDirId = kdf(secret: initialSeed, len: 32, context: "rootDirId")
 
 ## Deriving Encryption Keys
 
-All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 256 bit key for HMAC computations. We use the directory-specific seed from `dir.uvf` and feed it into the [KDF](../kdf/README.md):
+All file names are encrypted using AES-SIV, which requires a 512 bit key (which is internally split into two 256 bit AES keys). Furthermore we need a 512 bit key for HMAC computations. We use the directory-specific seed from `dir.uvf` and feed it into the [KDF](../kdf/README.md):
 
 ```ts
 let sivKey = kdf(secret: seed, len: 64, context: "siv")
-let hmacKey = kdf(secret: seed, len: 32, context: "hmac")
+let hmacKey = kdf(secret: seed, len: 64, context: "hmac")
 ```
 
 ## Mapping Directory IDs to Paths
@@ -238,7 +238,7 @@ flowchart TD
    kdfSiv{{"kdf(secret,64,'siv')"}}
    kdfSiv --> sivKey
    directorySeed -->|secret:| kdfHmac
-   kdfHmac{{"kdf(secret,32,'hmac')"}}
+   kdfHmac{{"kdf(secret,64,'hmac')"}}
    kdfHmac --> hmacKey
    hmacKey -->|key:| hmacSha256
    hmacSha256{{hmacSha256}}
