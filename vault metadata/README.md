@@ -133,7 +133,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 * `initialSeed` (immutable): The ID of the initial seed (may be used for non-rotating keys)
 * `latestSeed`: The ID of the most recently added seed. Used to derive keys for newly added files (changing it allows [key rotation](key-rotation.md))
 * `kdf` (immutable): A (fast) [KDF](../kdf/README.md) to derive purpose-built subkeys from the seeds. The key length depends on `fileFormat` and `nameFormat`
-* `kdfSalt` (immutable): A 32 byte random value for salting the [KDF](../kdf/README.md) which can in turn be used to generate further salts or IVs, avoiding reuse.
+* `kdfSalt` (immutable): A 32 byte random value for salting the [KDF](../kdf/README.md) which can in turn be used to generate further salts or IVs, avoiding reuse. Encoded in base64.
 
 > [!IMPORTANT]
 > Implementors MUST make sure to leniently parse this JSON object in regards to unknown fields. Further fields MAY be added for vendor-specific use.
