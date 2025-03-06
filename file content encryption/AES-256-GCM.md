@@ -10,12 +10,12 @@ Following the [_general header_ fields](README.md), this format requires 60 addi
 
 The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault%20metadata/README.md).
 
-```txt
-headerKey := kdf(secret: latestSeed, length: 32, context: "fileHeader")
-headerNonce := csprng(bytes: 12)
-fileKey := csprng(bytes: 32)
-encryptedFileKey, tag := aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
-header := generalHeaderFields . headerNonce . encryptedFileKey . tag
+```ts
+let headerKey = kdf(secret: latestSeed, length: 32, context: "fileHeader")
+let headerNonce = csprng(bytes: 12)
+let fileKey = csprng(bytes: 32)
+let [encryptedFileKey, tag] = aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
+let header = generalHeaderFields + headerNonce + encryptedFileKey + tag
 ```
 
 ```mermaid
@@ -46,20 +46,24 @@ The body is split up into chunks. Each chunk consists of:
 * `n` bytes encrypted payload (see subsections)
 * 16 bytes tag
 
-```txt
-cleartextBlocks[] := split(data: cleartext, maxBytes: n)
-for (uint32 i = 0; i < length(cleartextBlocks); i++) {
-    blockNonce := csprng(bytes: 12)
-    ad := [bigEndian(i), headerNonce]
-    ciphertextBlock, tag := aesGcm(cleartext: cleartextBlocks[i], key: fileKey, nonce: blockNonce, ad: ad)
-    ciphertextBlocks[i] := blockNonce . ciphertextBlock . tag
+```ts
+let blockSize = ...
+let nBlocks = floor(length(cleartext) / blockSize) + 1
+let cleartextBlocks[] = split(data: cleartext, maxBytes: blockSize)
+for (let i = 0; i <= nBlocks; i++) {
+    let blockNonce = csprng(bytes: 12)
+    let ad = [bigEndian(i), headerNonce]
+    let [ciphertextBlock, tag] = aesGcm(cleartext: cleartextBlocks[i], key: fileKey, nonce: blockNonce, ad: ad)
+    ciphertextBlocks[i] = blockNonce + ciphertextBlock + tag
 }
-body := join(ciphertextBlocks[])
+let body = join(ciphertextBlocks[])
 ```
 
 ### 32k
 
 This variant uses 32740 payload bytes per block (resulting in 32768 encrypted bytes per chunk).
+
+If the cleartext file size is a multiple of the cleartext block size (0, 32740, 65480, ... bytes), a zero-byte EOF block MUST be appended.
 
 ## Overview
 
@@ -77,7 +81,7 @@ erDiagram
     FILE_HEADER ||--|| GENERALHEADERFIELDS: has
     FILE_HEADER ||--|| CUSTOMHEADERFIELDS: has
 
-    FILE_BODY ||--|{ CIPHERTEXTBLOCK: "consists of"
+    FILE_BODY ||--|{ CIPHERTEXTBLOCK: "consists of at least one"
 
     GENERALHEADERFIELDS["general header fields"] {
         byte(3) fileSignature "ASCII `uvf` (big-endian) magic bytes"
