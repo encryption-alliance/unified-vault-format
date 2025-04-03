@@ -84,7 +84,7 @@ If required, further `alg`-specific header parameters MUST be added in the per-r
 
 #### Example Protected Header
 
-As the current version of this specification only allows for predefined parameter values, nothing but the parameter order may change. The base64url-encoded version of the protected header should therefore always be this:
+As the current version of this specification only allows for predefined parameter values, nothing but the parameter order may change. The base64url-encoded version of the protected header for spec version 1 should therefore always be this:
 
 ```json
 "protected": "eyJlbmMiOiJBMjU2R0NNIiwiY3R5IjoianNvbiIsImNyaXQiOlsidXZmLnNwZWMudmVyc2lvbiJdLCJ1dmYuc3BlYy52ZXJzaW9uIjoxfQ"
