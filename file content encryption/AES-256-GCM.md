@@ -65,6 +65,7 @@ let body = join(ciphertextBlocks[])
 ### 32k
 
 This variant uses 32740 payload bytes per block (resulting in 32768 encrypted bytes per chunk).
+It uses an unsigned 32 bit integer to store the number of blocks `nBlocks` and the current block number `i` (resulting in a maximum cleartext file size of 140,617,229,238,300 bytes or roughly 127 TiB). This limit inherently guarantees the file key to be used for no more than $2^{32}$ nonces, as per  NIST SP 800-38D (Section 8.3).
 
 If the cleartext file size is a multiple of the cleartext block size (0, 32740, 65480, ... bytes), a zero-byte EOF block MUST be appended.
 
