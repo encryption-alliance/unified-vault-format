@@ -34,4 +34,7 @@ All current and future formats must fulfil the following requirements:
 
 * The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
   This prohibits unnoticed tampering of block positions within a ciphertext file.
-* A zero-byte EOF block MUST be appended, if the preceding block is full (i.e. contains the maximum allowed number of bytes)
+* A zero-byte EOF block **MUST** be appended whenever the last data block is full, i.e. whenever the cleartext length is a multiple of the block size.
+  The empty file is such a multiple, so it consists of the EOF block alone.
+* When decrypting, an application **MUST** validate this structure, so that the cleartext size is authenticated and can be reliably derived from the ciphertext.
+  It **MUST** reject a file whose last data block is full but is not followed by the zero-byte EOF block (this indicates truncation), and it **MUST** reject a zero-byte block occurring anywhere other than as the final block following a full data block, or as the sole block of an empty file.
