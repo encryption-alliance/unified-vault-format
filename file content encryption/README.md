@@ -32,6 +32,7 @@ This is an exhaustive list of file body formats that have been defined in this v
 
 All current and future formats must fulfil the following requirements:
 
+* [file body formats](#file-formats) MUST be AEAD and MUST authenticate the [general header](#file-header)
 * The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
   This prohibits unnoticed tampering of block positions within a ciphertext file.
 * A zero-byte EOF block **MUST** be appended whenever the last data block is full, i.e. whenever the cleartext length is a multiple of the block size.

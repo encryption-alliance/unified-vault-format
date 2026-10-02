@@ -271,3 +271,12 @@ flowchart TD
    fileContentEncryption --> dirUvf
    dirUvf["directory metadata dir.uvf content"]
 ```
+
+## Security Considerations
+
+These considerations apply in addition to the general [Threat Model and Security Considerations](../security-considerations.md).
+
+* **Primitives.** AES-SIV with two 256-bit AES keys and HMAC-SHA256, both leaving roughly 128-bit security against Grover's algorithm.
+* **Determinism and parent binding.** AES-SIV is deterministic, so equal names within one directory produce equal ciphertext names (see [Metadata leakage](../security-considerations.md#metadata-leakage)). Using the parent `dirId` as associated data binds each name to its directory.
+* **Name length.** Unpadded base64url maps ciphertext length to byte length one-to-one, so the exact UTF-8 byte length of a cleartext name is recoverable from its ciphertext name.
+* **Directory paths.** The directory path is a keyed HMAC of the `dirId` truncated to 160 bits; it cannot be linked to a `dirId` without the `hmacKey`. Truncation to 160 bits keeps the probability of two directories colliding on the same path negligible (birthday paradox: 2^-80) while shortening the resulting path.

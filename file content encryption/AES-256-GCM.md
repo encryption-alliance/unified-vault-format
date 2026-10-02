@@ -158,3 +158,11 @@ erDiagram
         byte(16) tag "tag"
     }
 ```
+
+## Security Considerations
+
+These considerations apply in addition to the general [Threat Model and Security Considerations](../security-considerations.md).
+
+* **Primitives.** AES-256-GCM only. The 256-bit keys leave roughly 128-bit security against Grover's algorithm.
+* **Nonce budget.** The file key encrypts at most 2^32 blocks (see [32k](#32k)). The header key derived from a seed is shared by every file written under that seed and uses a random 96-bit nonce per file, so NIST SP 800-38D (Section 8.3) also limits a single seed to 2^32 file-header encryptions; applications approaching that count MUST rotate the seed.
+* **Length-revealing.** The exact cleartext size is derivable from the ciphertext size without the key (see the note under [32k](#32k)).

@@ -10,6 +10,14 @@ This is an exhaustive list of file name formats that have been defined in this v
 |---|---|---|---|
 | [AES-SIV-512-B64URL](AES-SIV-512-B64URL.md) | encrypt using AES-SIV, then base64url-encode file name, case-sensitive | just ASCII characters in ciphertext; case-sensitive | 16 byte overhead<br>4/3 expansion |
 
+## General requirements
+
+All current and future formats must fulfil the following requirements:
+
+* A format **MUST** be deterministic: the same cleartext name, parent `dirId` and seed **MUST** always yield the same ciphertext name.
+  This is required for stable lookup, O(1) file-system collision detection, version restoration and efficient directory listing.
+* A format **MUST** bind the ciphertext name to the parent `dirId`, so that a name cannot be moved to another directory undetected.
+
 ## Possible Future Formats
 
 > [!NOTE]
