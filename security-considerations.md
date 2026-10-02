@@ -39,7 +39,7 @@ A network attacker with read/write access to the transport is subsumed by T1/T2;
 * **G1** Confidentiality of file/symlink contents (A1).
 * **G2** Confidentiality of node names (A2).
 * **G3** Ciphertext directory's storage location can't be linked to its corresponding position in the cleartext hierarchy (A3).
-* **G4** Per-object integrity: no undetected modification or [truncation](#truncation-and-the-eof-block) of the bytes of a single object.
+* **G4** Per-object integrity: no undetected modification or [truncation](#truncation-and-the-eof-block) of the bytes of a single object, other than by [replaying](#rollback-and-replay-no-freshness) that object's own earlier versions.
 * **G5** Name–parent binding: a node name cannot be undetectably relocated to a different directory (A3).
 
 ### Non-goals (explicitly NOT provided)
@@ -71,6 +71,7 @@ A keyless adversary is limited to **replaying the user's own existing objects**;
 A node's type is currently inferred only from structure (a plain file; a directory containing `dir.uvf`; a directory containing `symlink.uvf`), and a directory's subtree is located from the `dirId` read out of its `dir.uvf`.
 Nothing binds the type, or the `dirId`, to the name slot the node occupies.
 An active provider (T2) can therefore relocate one directory's subtree under another name, or convert a directory into a symlink (and vice versa) by substituting a validly-encrypted metadata object harvested elsewhere.
+Since `symlink.uvf` is an ordinary encrypted file, any regular file whose content is a valid UTF-8 string can be presented as a symlink target as well.
 
 ### Rollback and replay (no freshness)
 
@@ -79,11 +80,13 @@ UVF carries no monotonic version counter, timestamp, or generation number inside
 An active provider (T2) that retains earlier versions can therefore, undetectably:
 
 * roll a single file back to earlier content (same node identity → passes every check),
+* roll individual chunks of a file back to an earlier version, splicing old and new content or shortening the file to an earlier version's length, provided the file header was retained when the file was modified (chunks are bound to their file and position, but not to a version),
 * roll a symlink back to an earlier target,
 * restore an earlier `vault.uvf` — reverting `latestSeed` and dropping seeds added since — thereby undoing a key rotation, or
 * restore an earlier self-consistent snapshot of the whole vault.
 
 This is the fork/rollback-consistency limitation inherent to per-file, sync-oriented encryption: a version counter inside per-file authenticated data is defeated by rolling back the entire snapshot.
+Chunk-level rollback is an accepted risk: the adversary cannot read the chunks it splices, so the result is vandalism rather than a targeted modification.
 
 > [!IMPORTANT]
 > Applications that require rollback resistance MUST maintain monotonic state out of band — at minimum, persisting the highest seed count / version seen and rejecting a `vault.uvf` that regresses.
@@ -96,7 +99,7 @@ The property holds because decryptors are **required** to enforce it: a conformi
 An active provider (T2) that strips trailing blocks therefore yields a file that fails validation rather than one that silently decrypts short.
 
 > [!NOTE]
-> This detects truncation of a given file version, not [rollback](#rollback-and-replay-no-freshness) to an earlier, validly-terminated version — an active provider can still replace a file wholesale with a shorter earlier version it retained.
+> This detects truncation of a given file version, not [rollback](#rollback-and-replay-no-freshness) to an earlier, validly-terminated version — an active provider can still replace a file wholesale with a shorter earlier version it retained, or (if the file header was retained on modification) reattach an earlier version's EOF chunk at its original position.
 
 ### Metadata leakage
 
@@ -106,6 +109,8 @@ Against a keyless adversary (T1/T2), UVF does not hide:
 * **Per-directory node counts.** Directory paths are one-way derivations of the `dirId`, which hides *nesting*, but the number of directories and the number of entries in each are visible.
 * **Name lengths**, depending on the format's encoding.
 * **Name equality over time.** Name encryption is deterministic, so within one directory a recurring ciphertext name reveals that the same cleartext name recurred (e.g. delete-then-recreate, or rename-away-and-back). Cross-directory correlation is prevented by the distinct parent `dirId`.
+* **Node types.** The file names `dir.uvf` and `symlink.uvf` are plaintext, so whether a node is a file, a directory or a symlink is visible, as is the length of each symlink target.
+* **Seed epochs.** The seed ID in every file header is plaintext, so the seed under which each file and directory was written is visible, revealing the key rotation history and grouping objects by creation epoch.
 * **Access patterns and timing.**
 
 Determinism is required for stable lookup, O(1) file-system collision detection, version restoration and efficient directory listing including file size.
@@ -125,7 +130,7 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
 Sharing a vault is full mutual trust.
 
-Removing a recipient requires rotating the KEK, and (per the section above) does not retroactively protect data that the former recipient could already read.
+Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients](vault%20metadata/README.md#removing-recipients)), since the former recipient retains knowledge of the previous CEK and all previous seeds. Per the section above, this does not retroactively protect data that the former recipient could already read.
 
 ### Cryptographic agility and quantum resistance
 

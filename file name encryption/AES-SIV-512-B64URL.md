@@ -91,6 +91,7 @@ Regardless of the hierarchy of cleartext paths, ciphertext directories are alway
 The cleartext name of a node gets encoded using UTF-8 in [Normalization Form C](https://unicode.org/reports/tr15/#Norm*Forms) to get a unique binary representation.
 
 The byte sequence is then encrypted using AES-SIV as defined in [RFC 5297](https://tools.ietf.org/html/rfc5297). In order to bind the node to the containing directory, preventing undetected manipulation of the folder structure, the directory ID of the parent folder is used as associated data.
+The associated data vector passed to S2V ([RFC 5297, Section 2.4](https://tools.ietf.org/html/rfc5297#section-2.4)) MUST consist of exactly one component, the 32 byte `parentDirId`. No nonce is used.
 
 Lastly, the ciphertext is encoded with unpadded base64url and a file extension is added.
 
