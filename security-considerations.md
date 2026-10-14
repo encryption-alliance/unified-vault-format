@@ -48,7 +48,7 @@ A network attacker with read/write access to the transport is subsumed by T1/T2;
 * **N2** Binding of a regular file's *content* to its *name or location* (see [File content is not bound to its name](#file-content-is-not-bound-to-its-name-or-location)).
 * **N3** Metadata hiding — exact file sizes, node counts, per-directory fan-out, name lengths, name equality over time, and access patterns/timing are all observable (see [Metadata leakage](#metadata-leakage)).
 * **N4** Availability / denial-of-service resistance.
-* **N5** Forward secrecy or post-compromise security for data already written (see [Key rotation](#key-rotation-does-not-re-key-existing-data)).
+* **N5** Forward secrecy or post-compromise security for data already written, for names added to pre-existing directories, or for content written to pre-existing files under a retained header (see [Key rotation](#key-rotation-does-not-re-key-existing-data)).
 * **N6** Protection against a malicious recipient (T3) (see [Shared vaults](#shared-vaults-and-malicious-recipients)).
 
 ## Security Considerations
@@ -118,19 +118,22 @@ Determinism is required for stable lookup, O(1) file-system collision detection,
 ### Key rotation does not re-key existing data
 
 Rotation appends a seed and advances `latestSeed`.
-Directory seeds are immutable and existing objects are not re-encrypted, so rotation affects only newly created directories' names and newly written content.
+Directory seeds are immutable and existing objects are not re-encrypted, so rotation affects only newly created directories and newly created files.
+Names of nodes added to a pre-existing directory stay under that directory's seed, and content written to a pre-existing file whose header is retained stays under the header's seed; whether to rewrite such a file under a new header is an application decision.
 Every seed ever used remains in the append-only `seeds` map and stays decryptable from the current `vault.uvf`.
 Rotation therefore provides **no forward secrecy and no remediation for a leaked seed** — the old seed still decrypts all data written under it.
 
 > [!IMPORTANT]
-> Recovering confidentiality after a seed or KEK compromise requires re-encrypting affected data under a fresh seed and rotating the KEK; rotation alone does not achieve this.
+> Recovering confidentiality after a seed compromise requires re-encrypting affected data under a fresh seed; rotation alone does not achieve this.
+> A compromised KEK additionally exposes the Content Encryption Key, so a fresh CEK MUST be generated as well (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)); re-wrapping the existing CEK under a new KEK does not achieve this.
 
 ### Shared vaults and malicious recipients
 
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
 Sharing a vault is full mutual trust.
 
-Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients](vault%20metadata/README.md#removing-recipients)), since the former recipient retains knowledge of the previous CEK and all previous seeds. Per the section above, this does not retroactively protect data that the former recipient could already read.
+Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of the previous CEK and all previous seeds.
+Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
 
 ### Cryptographic agility and quantum resistance
 

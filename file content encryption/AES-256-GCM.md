@@ -65,7 +65,7 @@ let body = join(ciphertextBlocks[])
 ### 32k
 
 This variant uses 32740 payload bytes per block (resulting in 32768 encrypted bytes per chunk).
-It uses an unsigned 32 bit integer to store the number of blocks `nBlocks` and the current block number `i` (resulting in a maximum cleartext file size of 140,617,229,238,300 bytes or roughly 127 TiB). This limit inherently guarantees the file key to be used for no more than $2^{32}$ nonces, as per  NIST SP 800-38D (Section 8.3).
+It uses an unsigned 32 bit integer to store the number of blocks `nBlocks` and the current block number `i` (resulting in a maximum cleartext file size of 140,617,229,238,300 bytes or roughly 127 TiB). This bounds a single version of the file to $2^{32}$ blocks. NIST SP 800-38D (Section 8.3) limits the file key to $2^{32}$ nonces over its entire lifetime, so if the header is retained across modifications, every re-encrypted block counts against the same budget (see [Security Considerations](#security-considerations)).
 
 If the cleartext file size is a multiple of the cleartext block size (0, 32740, 65480, ... bytes), a zero-byte EOF block MUST be appended.
 
@@ -164,6 +164,9 @@ erDiagram
 These considerations apply in addition to the general [Threat Model and Security Considerations](../security-considerations.md).
 
 * **Primitives.** AES-256-GCM only. The 256-bit keys leave roughly 128-bit security against Grover's algorithm.
-* **Nonce budget.** The file key encrypts at most 2^32 blocks (see [32k](#32k)). The header key derived from a seed is shared by every file written under that seed and uses a random 96-bit nonce per file, so NIST SP 800-38D (Section 8.3) also limits a single seed to 2^32 file-header encryptions; applications approaching that count MUST rotate the seed.
+* **Nonce budget.** The file key MUST NOT encrypt more than 2^32 blocks over its lifetime, cumulated across all modifications of the file (see [32k](#32k) and header retention below). The header key derived from a seed is shared by every file written under that seed and uses a random 96-bit nonce per file, so NIST SP 800-38D (Section 8.3) also limits a single seed to 2^32 file-header encryptions; applications approaching that count MUST rotate the seed.
 * **Length-revealing.** The exact cleartext size is derivable from the ciphertext size without the key (see the note under [32k](#32k)).
-* **Chunk-level rollback.** Modifying a file does not require a new header. If the header (and thus `fileKey` and `headerNonce`) is retained, chunks of earlier versions remain valid at their original position and can be spliced into the current version by an adversary retaining old ciphertexts (see [Rollback and replay](../security-considerations.md#rollback-and-replay-no-freshness)).
+* **Header retention.** Modifying a file does not require a new header. Retaining the header (and thus `fileKey` and `headerNonce`) has three consequences, which an application MUST weigh against the cost of re-encrypting the whole file:
+  * chunks of earlier versions remain valid at their original position and can be spliced into the current version by an adversary retaining old ciphertexts (see [Rollback and replay](../security-considerations.md#rollback-and-replay-no-freshness)),
+  * every re-encrypted block consumes the file key's nonce budget, so an application MUST track the cumulative count or write a new header before exceeding it,
+  * the file stays under the seed referenced by its header, so key rotation and recipient removal do not apply to content written afterwards (see [Removing Recipients and Compromised KEKs](../vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
