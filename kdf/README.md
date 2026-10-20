@@ -17,6 +17,19 @@ In the context of this specification `kdf()` is a ternary function with the foll
 
 Other parameters, such as the internally used hash function, are constant and defined during vault creation.
 
+### Context Strings
+
+The context separates the keys derived from one seed. The following contexts are defined by this version of the specification:
+
+| Context | Output length | Defined in |
+|---|---|---|
+| `seedId` | 4 | [vault metadata](../vault%20metadata/README.md#seed-ids) |
+| `rootDirId` | 32 | [AES-SIV-512-B64URL](../file%20name%20encryption/AES-SIV-512-B64URL.md#directory-id) |
+| `fileHeader`, `dirHeader`, `symlinkHeader` | 32 | [file content encryption](../file%20content%20encryption/README.md#general-requirements) |
+| `siv`, `hmac` | 64 | [AES-SIV-512-B64URL](../file%20name%20encryption/AES-SIV-512-B64URL.md#deriving-encryption-keys) |
+
+A context MUST NOT be used with more than one output length, since the KDFs listed below produce outputs where a shorter one is a prefix of a longer one. Contexts introduced by future formats MUST be unique across all formats and SHOULD include the format ID.
+
 ## Available KDFs
 
 The KDF for a given vault is specified by the `kdf` field in its [vault metadata file](../vault%20metadata/README.md). This is an exhaustive list of functions that conforming applications MUST support:

@@ -11,11 +11,14 @@ This data is immutable and therefore linked with a directory eternally, survivin
 1. Within the parent dir (except for root), where it serves a link to the child dir
 2. In the child dir itself (allowing disaster recovery without the parent). 
 
+Both copies contain the same `dirId` and reference the same seed ID. During traversal, only the copy within the parent dir is used; the copy within the child dir is used for recovery only.
 
 > [!NOTE] Disaster recovery without the parent
 > Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
 > all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
 > within the lost parent dir.
+>
+> When recovering from the copy within the child dir, an application MUST verify that the [path derived](#mapping-directory-ids-to-paths) from the recovered seed and `dirId` equals the path the copy was found under.
 
 The exact file structure of `dir.uvf` will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
 
@@ -100,6 +103,8 @@ let ciphertext = aesSiv(secret: cleartextName, ad: parentDirId, key: sivKey)
 let ciphertextName = base64url(data: ciphertext) + '.uvf'
 ```
 
+When decrypting, the base64url decoder MUST reject padding characters, characters outside the base64url alphabet, and non-zero trailing bits, so that every ciphertext has exactly one encoded representation and the file system's name uniqueness applies to it.
+
 ## Ciphertext Directory Structure
 
 ### Node Types
@@ -111,6 +116,8 @@ Depending on the [type of a cleartext node](README.md#node-types), the encrypted
 | file                | file                                |
 | directory           | directory containing `dir.uvf`      |
 | symlink             | directory containing `symlink.uvf`  |
+
+A ciphertext directory containing both `dir.uvf` and `symlink.uvf`, or neither, MUST be treated as invalid.
 
 ### Format of `dir.uvf` and `symlink.uvf`
 

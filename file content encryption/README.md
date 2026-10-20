@@ -13,6 +13,8 @@ Each file shall have a file header at offset 0 containing:
     * e.g. IVs
     * ...
 
+When decrypting, a file MUST be rejected if its spec version is not supported by the application or if its seed ID is not present in the `seeds` map of the [vault metadata file](../vault%20metadata/README.md#encrypted-content).
+
 ## File Formats
 
 File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` field.
