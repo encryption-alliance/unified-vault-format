@@ -24,7 +24,7 @@ The exact file structure of `dir.uvf` will be discussed in more detail [below](#
 
 At creation time, a directory's seed is always the `latestSeed` as defined in the [vault metadata file](../vault%20metadata/README.md#encrypted-content). In case of the root directory this happens to also be the `initialSeed`.
 
-When navigating into a directory, the seed is read from the corresponding `dir.uvf`'s file header. More precisely, the header contains the seed ID, and the seed can the be looked up in the `seeds` in [vault metadata file](../vault%20metadata/README.md#encrypted-content).
+When navigating into a directory, the seed is read from the corresponding `dir.uvf`'s file header. More precisely, the header contains the seed ID, and the seed can then be looked up in the `seeds` in [vault metadata file](../vault%20metadata/README.md#encrypted-content).
 
 > [!NOTE]
 > A directory's seed is used to derive file name encryption keys used to encrypt the directory's direct children's names. Since the seed is immutable, new child nodes added at a later time will use the same file name encryption keys as old children.

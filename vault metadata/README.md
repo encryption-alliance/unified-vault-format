@@ -189,7 +189,7 @@ Deriving IDs from seed values makes concurrent additions mergeable: the union of
 * For recipients whose `alg` uses a symmetric KEK, the object MUST NOT contain a `jwk` member.
 * Further members MAY be added for vendor-specific use, using reverse domain name notation.
 
-The recipient list is part of the encrypted payload for two reasons. First, the per-recipient unprotected headers are not covered by the JWE integrity protection, so an adversary with write access to the storage could replace a recipient's public key by its own and the next client writing the file would wrap the CEK for the adversary. Second, whoever knows a recipient's public key can author a `vault.uvf` that this recipient will decrypt successfully. Public keys of recipients are therefore confidential to the vault's members: they MUST NOT be stored in any unencrypted part of the file and MUST NOT be disclosed beyond the parties entitled to write `vault.uvf`. Clients MUST only use public keys from `recipientDetails` when wrapping the CEK (see [Writing](../implementation-notes.md#writing)).
+The recipient list is part of the encrypted payload for two reasons. First, the per-recipient unprotected headers are not covered by the JWE integrity protection, so an adversary with write access to the storage could replace a recipient's public key by its own and the next client writing the file would wrap the CEK for the adversary. Second, whoever knows a recipient's public key can author a `vault.uvf` that this recipient will decrypt successfully. Public keys of recipients are therefore confidential to the vault's members: they MUST NOT be stored in any unencrypted part of the file and MUST NOT be disclosed beyond the parties entitled to write `vault.uvf`. When wrapping the CEK, clients use only the public keys from `recipientDetails` (see [Writing](../implementation-notes.md#writing)).
 
 ## Validation and Writing
 
@@ -199,7 +199,7 @@ The checks a client performs on unlock and the rules it observes when writing `v
 
 A removed recipient, or whoever holds a compromised _KEK_, knows the CEK and all seeds contained in the payload at that time. Merely deleting the entry from the `recipients` array therefore protects nothing, even though the fresh CEK of the next write is no longer wrapped for it.
 
-In both cases, a new seed MUST be added and set as `latestSeed` in the same write that removes the recipient.
+In both cases, a new seed MUST be added and set as `latestSeed` in the same write that removes the recipient or replaces the compromised _KEK_.
 
 This protects files and directories created afterwards, provided that clients enforce [Seed Pinning](../implementation-notes.md#seed-pinning): without it, the former key holder can restore the previous `vault.uvf` or author a new one for a public-key recipient and thereby undo the removal. It does not protect:
 

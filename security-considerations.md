@@ -27,11 +27,13 @@ UVF aims to protect the confidentiality and the integrity/authenticity of:
 
 A network attacker with read/write access to the transport is subsumed by T1/T2; securing the transport (e.g. TLS) is the application's responsibility and out of scope.
 
+A **former recipient**, i.e. one that was [removed](vault%20metadata/README.md#removing-recipients-and-compromised-keks) from the vault, typically retains write access to the storage and thus combines the capabilities of T2 with knowledge of every key and public key of its membership period. It is the adversary that [Seed Pinning](implementation-notes.md#seed-pinning) is designed against (see [Forged vault metadata](#forged-vault-metadata)).
+
 ### Trust assumptions (out of scope)
 
 * **Key material retrieval is sound.** How each recipient's key decapsulates the JWE Content Encryption Key (the KEK workflow) is application-specific and assumed correct; see [Vault Metadata](vault%20metadata/README.md).
 * **The cryptographic primitives are secure** (for the configured content encryption, name encryption and KDF), and the CSPRNG used for seeds, dirIds, keys, and nonces is cryptographically strong.
-* **The client endpoint is trusted** — its memory, its random source, and its correct implementation of this spec. Endpoint compromise and side channels (timing, cache) are out of scope.
+* **The client endpoint is trusted** — its memory, its random source, its persisted state such as [seed pins](implementation-notes.md#seed-pinning), and its correct implementation of this spec. Endpoint compromise and side channels (timing, cache) are out of scope.
 * **Availability is not guaranteed.** An active provider (T2) can always withhold, corrupt, or delete data; denial of service is out of scope.
 
 ### Security goals (against a keyless adversary, T1/T2)
@@ -44,7 +46,7 @@ A network attacker with read/write access to the transport is subsumed by T1/T2;
 
 ### Non-goals (explicitly NOT provided)
 
-* **N1** Freshness / rollback resistance (see [Rollback and replay](#rollback-and-replay-no-freshness)).
+* **N1** Freshness / rollback resistance for files and for the vault as a whole (see [Rollback and replay](#rollback-and-replay-no-freshness)). The one exception is `vault.uvf` on a client that has observed the current version (see [Seed Pinning](implementation-notes.md#seed-pinning)).
 * **N2** Binding of a regular file's *content* to its *name or location* (see [File content is not bound to its name](#file-content-is-not-bound-to-its-name-or-location)).
 * **N3** Metadata hiding — exact file sizes, node counts, per-directory fan-out, name lengths, name equality over time, and access patterns/timing are all observable (see [Metadata leakage](#metadata-leakage)).
 * **N4** Availability / denial-of-service resistance.
@@ -155,7 +157,7 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
 Sharing a vault is full mutual trust with respect to the vault's contents.
-It is not trust in the other recipient's machine: a recipient can craft names or symlink targets that would escape the vault's cleartext root on another recipient's endpoint, which is why decrypted names and targets are validated (see [Validation of Decrypted Names and Symlink Targets](file%20name%20encryption/README.md#validation-of-decrypted-names-and-symlink-targets)).
+It is not trust in the other recipient's machine: a recipient can craft names or symlink targets that would escape the vault's cleartext root on another recipient's endpoint, which is why decrypted names and targets are validated (see [Decrypted Names](implementation-notes.md#decrypted-names) and [Symlink Targets](implementation-notes.md#symlink-targets)).
 
 Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed Pinning](implementation-notes.md#seed-pinning) (see [Forged vault metadata](#forged-vault-metadata)).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.

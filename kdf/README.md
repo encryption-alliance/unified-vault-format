@@ -36,7 +36,7 @@ The KDF for a given vault is specified by the `kdf` field in its [vault metadata
 
 | ID          | Description                       |
 |-------------|-----------------------------------|
-| HKDF-SHA512 | HKDF as defined in [RFC 5869](https://datatracker.ietf.org/doc/html/rfc5869) using SHA512, <br/> salted by the `salt` value defined in the [vault metadata file](../vault%20metadata/README.md) |
+| HKDF-SHA512 | HKDF as defined in [RFC 5869](https://datatracker.ietf.org/doc/html/rfc5869) using SHA512, <br/> salted by the `kdfSalt` value defined in the [vault metadata file](../vault%20metadata/README.md#encrypted-content) |
 
 > [!NOTE]
 > Future versions of this standard might add further KDFs or deprecate existing ones.
