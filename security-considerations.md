@@ -124,14 +124,14 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 
 > [!IMPORTANT]
 > Recovering confidentiality after a seed compromise requires re-encrypting affected data under a fresh seed; rotation alone does not achieve this.
-> A compromised KEK additionally exposes the Content Encryption Key, so a fresh CEK MUST be generated as well (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)); re-wrapping the existing CEK under a new KEK does not achieve this.
+> A compromised KEK additionally exposes the Content Encryption Key of the `vault.uvf` it unlocks. Every write of `vault.uvf` uses a fresh CEK (see [Writing](vault%20metadata/README.md#writing)), so this exposure ends with the next write that no longer wraps the CEK for the compromised KEK, but the seeds contained in the exposed payload remain known (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
 
 ### Shared vaults and malicious recipients
 
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
 Sharing a vault is full mutual trust.
 
-Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of the previous CEK and all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning).
+Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
 
 ### Cryptographic agility and quantum resistance

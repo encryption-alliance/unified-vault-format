@@ -64,11 +64,12 @@ With this version of the UVF specification, the following registered header para
 | Location | Header Parameter | Allowed Values | Remark |
 |---|---|---|---|
 | Per-Recipient Unprotected Header | `alg` | any | Application-dependent |
-| Per-Recipient Unprotected Header | `kid` | any, if prefixed | MUST use application-specific prefix in reverse-DNS notation |
+| Per-Recipient Unprotected Header | `kid` | any, if prefixed | MUST use application-specific prefix in reverse-DNS notation, MUST be unique within the file and MUST be listed in `uvf.recipients` |
 | Protected Header | `enc` | `A256GCM` | Further encryption algorithms may be added in future revisions |
 | Protected Header | `cty` | `json` | `application/json` formally correct but `application/` SHOULD be omitted [as per RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515.html#section-4.1.10) |
-| Protected Header | `crit` | `["uvf.spec.version"]` | |
+| Protected Header | `crit` | `["uvf.spec.version", "uvf.recipients"]` | |
 | Protected Header | `uvf.spec.version` | `1` | To be increased with newer revisions of this spec |
+| Protected Header | `uvf.recipients` | object | Authenticated recipient list, see [Recipients](#recipients) |
 
 `zip` MUST be absent (disallowing compression of the plaintext)
 
@@ -82,12 +83,31 @@ If required, further `alg`-specific header parameters MUST be added in the per-r
 >
 > Application-specific parameters MUST be prefixed accordingly, e.g. using `com.example.`.
 
+#### Recipients
+
+The per-recipient unprotected headers are not covered by the JWE integrity protection, so an adversary with write access to the storage can alter them. In particular, an adversary could replace a recipient's public key by its own, so that the next client writing the file wraps the CEK for the adversary. To prevent this, the protected header carries the authoritative list of recipients in `uvf.recipients`:
+
+* The value is a JSON object whose keys are the `kid` values of all recipients.
+* For recipients whose `alg` wraps the CEK with a public key, the entry MUST contain the recipient's public key as a JWK ([RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517)) in a `jwk` member. For recipients whose `alg` uses a symmetric KEK, the entry MUST NOT contain a `jwk` member.
+* The set of keys MUST equal the set of `kid` values in the `recipients` array (see [Validation](#validation)).
+
+Clients MUST only use public keys from `uvf.recipients` when wrapping the CEK (see [Writing](#writing)). A `jwk` in the per-recipient unprotected header, if present, is informational.
+
 #### Example Protected Header
 
-As the current version of this specification only allows for predefined parameter values, nothing but the parameter order may change. The base64url-encoded version of the protected header for spec version 1 should therefore always be this:
-
 ```json
-"protected": "eyJlbmMiOiJBMjU2R0NNIiwiY3R5IjoianNvbiIsImNyaXQiOlsidXZmLnNwZWMudmVyc2lvbiJdLCJ1dmYuc3BlYy52ZXJzaW9uIjoxfQ"
+{
+    "enc": "A256GCM",
+    "cty": "json",
+    "crit": ["uvf.spec.version", "uvf.recipients"],
+    "uvf.spec.version": 1,
+    "uvf.recipients": {
+        "com.example.vaultpassword": {},
+        "com.example.userkey.42": {
+            "jwk": { "kty": "OKP", "crv": "X25519", "x": "..." }
+        }
+    }
+}
 ```
 
 #### Example Per-Recipient Unprotected Header
@@ -119,19 +139,8 @@ This is an example for the `recipients` section of the metadata file that contai
 > [!TIP]
 > Applications that produce a symmetric key in any other way, e.g. using Argon2 may use `"alg": "A256KW"`. It is recommended to document how a key is produced or where it is stored in order to avoid vendor lock-ins.
 
-#### Removing Recipients and Compromised KEKs
-
-A removed recipient, or whoever holds a compromised _KEK_, knows the Content Encryption Key (CEK) and all seeds contained in the payload at that time. Merely deleting the entry from the `recipients` array or re-wrapping the same CEK under a new _KEK_ therefore protects nothing.
-
-In both cases, a new random CEK MUST be generated, the payload MUST be re-encrypted with it and wrapped for each remaining recipient, and a new seed MUST be added and set as `latestSeed`.
-
-This protects files and directories created afterwards, provided that clients enforce [Seed ID Pinning](#seed-id-pinning): without it, the former key holder can restore the previous `vault.uvf` and undo the removal. It does not protect:
-
-* data already written (see [Key rotation](../security-considerations.md#key-rotation-does-not-re-key-existing-data)),
-* names of nodes added to pre-existing directories, since a directory's seed is immutable,
-* content written to pre-existing files whose file header is retained, since the header references the old seed (see [Header retention](../file%20content%20encryption/AES-256-GCM.md#security-considerations)).
-
-Whether to rewrite a pre-existing file with a new header (and thus under the new seed) when modifying it is left to the application, trading full re-encryption against continued exposure to the former key holder.
+> [!NOTE]
+> Parameters of password-based KEK derivation such as `p2c` or an application's Argon2 parameters are read from the unprotected header before any integrity check is possible. Tampering with them can only cause the unlock to fail, but clients SHOULD bound such parameters to avoid being driven into excessive memory or CPU consumption.
 
 ### Encrypted Content
 
@@ -193,7 +202,9 @@ When adding a seed, an application MUST draw a new seed if the derived ID alread
 
 Every client MUST validate `vault.uvf` on every unlock, before deriving any key from its content, and MUST reject the file if any check fails. Validation consists of the checks listed below in addition to the JWE integrity check and the format checks stated in [Encrypted Content](#encrypted-content).
 
-* The protected header contains exactly the parameters and values listed in [JOSE Header](#jose-header), in particular `zip` is absent and `uvf.spec.version` is supported.
+* The protected header contains the parameters and values listed in [JOSE Header](#jose-header), in particular `zip` is absent and `uvf.spec.version` is supported.
+* Every element of the `recipients` array has a unique `kid`, and the set of these `kid` values equals the set of keys of `uvf.recipients`.
+* Every entry of `uvf.recipients` contains a `jwk` if and only if the corresponding recipient's `alg` wraps the CEK with a public key.
 * `seeds` is not empty, every seed is 32 bytes long, and every ID equals `kdf(seed, 4, "seedId")` for its seed.
 * `initialSeed` and `latestSeed` reference IDs present in `seeds`.
 * `kdfSalt` is 32 bytes long.
@@ -211,3 +222,28 @@ Since every security-relevant change to `vault.uvf` (key rotation, recipient rem
 
 > [!NOTE]
 > Pinning only protects clients that have observed the newer `vault.uvf`. A client that unlocks a vault for the first time, or that has been offline since before a rotation, has no basis for rejecting an older version. Applications SHOULD provide such clients with the expected seed IDs out of band, e.g. as part of a vault invitation.
+
+## Writing
+
+A client MUST only write `vault.uvf` based on a version it has read and [validated](#validation). Every write MUST:
+
+1. generate a fresh random CEK and a fresh random `iv`,
+2. wrap the CEK for every recipient listed in the validated `uvf.recipients`, plus recipients the client adds, minus recipients the client removes,
+3. use only the public keys contained in the validated `uvf.recipients` for wrapping; adding a recipient means adding its `uvf.recipients` entry and its `recipients` element in the same write,
+4. carry over all seeds of the validated version, since `seeds` is append-only.
+
+Since the CEK is wrapped anew, the writing client MUST hold the KEK of every symmetric recipient. A client that unlocked the vault with a different recipient's key, e.g. a recovery key, therefore MUST NOT write `vault.uvf` unless it replaces every symmetric recipient it cannot re-wrap for, e.g. by setting a new password.
+
+### Removing Recipients and Compromised KEKs
+
+A removed recipient, or whoever holds a compromised _KEK_, knows the CEK and all seeds contained in the payload at that time. Merely deleting the entry from the `recipients` array therefore protects nothing, even though the fresh CEK of the next write is no longer wrapped for it.
+
+In both cases, a new seed MUST be added and set as `latestSeed` in the same write that removes the recipient.
+
+This protects files and directories created afterwards, provided that clients enforce [Seed ID Pinning](#seed-id-pinning): without it, the former key holder can restore the previous `vault.uvf` and undo the removal. It does not protect:
+
+* data already written (see [Key rotation](../security-considerations.md#key-rotation-does-not-re-key-existing-data)),
+* names of nodes added to pre-existing directories, since a directory's seed is immutable,
+* content written to pre-existing files whose file header is retained, since the header references the old seed (see [Header retention](../file%20content%20encryption/AES-256-GCM.md#security-considerations)).
+
+Whether to rewrite a pre-existing file with a new header (and thus under the new seed) when modifying it is left to the application, trading full re-encryption against continued exposure to the former key holder.
