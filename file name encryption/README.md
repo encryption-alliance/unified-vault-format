@@ -10,6 +10,18 @@ This is an exhaustive list of file name formats that have been defined in this v
 |---|---|---|---|
 | [AES-SIV-512-B64URL](AES-SIV-512-B64URL.md) | encrypt using AES-SIV, then base64url-encode file name, case-sensitive | just ASCII characters in ciphertext; case-sensitive | 16 byte overhead<br>4/3 expansion |
 
+## Node Types
+
+A cleartext node is one of the following types:
+
+| Node type | Cleartext | Encrypted representation |
+|---|---|---|
+| regular file | content | an encrypted file, see [file content encryption](../file%20content%20encryption/README.md) |
+| directory | its children | defined by the name format, typically including a directory metadata object |
+| symlink | its target | defined by the name format, typically a symlink metadata object holding the target |
+
+A name format defines how directories and symlinks are represented in the ciphertext structure and which metadata objects it stores for them. Such metadata objects MUST be encrypted using the vault's content encryption format, with the header key derived for the respective node type (see [General requirements](../file%20content%20encryption/README.md#general-requirements) of file content encryption).
+
 ## General requirements
 
 All current and future formats must fulfil the following requirements:

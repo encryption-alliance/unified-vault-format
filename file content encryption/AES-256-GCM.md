@@ -8,10 +8,10 @@ Following the [_general header_ fields](README.md), this format requires 60 addi
 * 32 byte encrypted file content key
 * 16 byte tag
 
-The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault%20metadata/README.md).
+The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault%20metadata/README.md). The KDF context `headerContext` is `"fileHeader"`, `"dirHeader"` or `"symlinkHeader"` depending on the node type (see [General requirements](README.md#general-requirements)).
 
 ```ts
-let headerKey = kdf(secret: latestSeed, length: 32, context: "fileHeader")
+let headerKey = kdf(secret: latestSeed, length: 32, context: headerContext)
 let headerNonce = csprng(bytes: 12)
 let fileKey = csprng(bytes: 32)
 let [encryptedFileKey, tag] = aesGcm(cleartext: fileKey, key: headerKey, nonce: headerNonce, ad: generalHeaderFields)
@@ -24,7 +24,7 @@ title: Derivation of Encrypted File Content Key for AES-256-GCM-XXk format
 ---
 flowchart TD
     seed -->|secret:| kdf0
-    kdf0{{"kdf(secret,32,'fileHeader')"}}
+    kdf0{{"kdf(secret,32,headerContext)"}}
     kdf0 --> headerKey
     headerKey -->|key:| aesGcm
     aesGcm{{aesGcm}}

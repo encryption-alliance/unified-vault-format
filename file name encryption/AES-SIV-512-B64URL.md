@@ -104,7 +104,7 @@ let ciphertextName = base64url(data: ciphertext) + '.uvf'
 
 ### Node Types
 
-Depending on the kind of a cleartext node, the encrypted name is then either used to create a file or a directory:
+Depending on the [type of a cleartext node](README.md#node-types), the encrypted name is then either used to create a file or a directory:
 
 | cleartext node type | ciphertext structure                |
 |---------------------|-------------------------------------|
@@ -114,7 +114,7 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 
 ### Format of `dir.uvf` and `symlink.uvf`
 
-Both, `dir.uvf` and `symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
+`dir.uvf` is the directory metadata object and `symlink.uvf` the symlink metadata object of this format. Both are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault, with the header key derived using the KDF context `dirHeader` or `symlinkHeader` respectively (see [General requirements](../file%20content%20encryption/README.md#general-requirements)).
 
 The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory. A `dir.uvf` whose cleartext is not exactly 32 bytes long MUST be rejected.
 

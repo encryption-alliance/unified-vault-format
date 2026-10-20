@@ -66,12 +66,12 @@ This is a structural consequence of Requirement 2 (renaming/moving a node must n
 Binding content to location would break atomic moves; binding it to the name would break O(1) collision detection.
 A keyless adversary is limited to **replaying the user's own existing objects**; it cannot forge new content.
 
-### Node type and directory relocation
+### Directory relocation
 
-A node's type is currently inferred only from structure (a plain file; a directory containing `dir.uvf`; a directory containing `symlink.uvf`), and a directory's subtree is located from the `dirId` read out of its `dir.uvf`.
-Nothing binds the type, or the `dirId`, to the name slot the node occupies.
-An active provider (T2) can therefore relocate one directory's subtree under another name, or convert a directory into a symlink (and vice versa) by substituting a validly-encrypted metadata object harvested elsewhere.
-Since `symlink.uvf` is an ordinary encrypted file, any regular file whose content is a valid UTF-8 string can be presented as a symlink target as well.
+A node's type is inferred from structure (a plain file; a directory containing `dir.uvf`; a directory containing `symlink.uvf`), and a directory's subtree is located from the `dirId` read out of its `dir.uvf`.
+The node type is bound to the object through the header key's KDF context (see [General requirements](file%20content%20encryption/README.md#general-requirements)), so a regular file cannot be presented as a symlink target or as directory metadata, and vice versa.
+Nothing binds the `dirId` to the name slot the node occupies, though.
+An active provider (T2) can therefore relocate one directory's subtree under another name, or make two names point to the same subtree, by substituting a `dir.uvf` harvested elsewhere in the same vault.
 
 ### Rollback and replay (no freshness)
 

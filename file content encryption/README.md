@@ -33,6 +33,15 @@ This is an exhaustive list of file body formats that have been defined in this v
 All current and future formats must fulfil the following requirements:
 
 * [file body formats](#file-formats) MUST be AEAD and MUST authenticate the [general header](#file-header)
+* The key used to encrypt the file header **MUST** be derived from the seed using the [KDF](../kdf/README.md) with a context that depends on the [node type](../file%20name%20encryption/README.md#node-types) the encrypted object belongs to:
+
+  | Encrypted object | KDF context |
+  |---|---|
+  | content of a regular file | `fileHeader` |
+  | directory metadata | `dirHeader` |
+  | symlink metadata | `symlinkHeader` |
+
+  This prohibits presenting an object of one node type as another, e.g. a regular file as a symlink target or as directory metadata.
 * The *BLOCK NUMBER* (first data block is *BLOCK NUMBER* zero) **MUST** be mixed into each encrypted data block.
   This prohibits unnoticed tampering of block positions within a ciphertext file.
 * A zero-byte EOF block **MUST** be appended whenever the last data block is full, i.e. whenever the cleartext length is a multiple of the block size.
