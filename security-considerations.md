@@ -114,6 +114,22 @@ Against a keyless adversary (T1/T2), UVF does not hide:
 
 Determinism is required for stable lookup, O(1) file-system collision detection, version restoration and efficient directory listing including file size.
 
+### Compromise granularity
+
+The key hierarchy bounds what the exposure or misuse of a single key reveals:
+
+| Exposed key | Derived from | Exposes |
+|---|---|---|
+| file key | random, per file | the content of that one file |
+| header key | seed, per node type | the file keys, and thus the content, of every object of that node type written under that seed |
+| name keys (`siv`, `hmac`) | seed | the names and storage locations of every directory whose seed it is |
+| seed | random, per rotation | everything written under it: header keys, name keys, and `rootDirId` for the initial seed |
+| CEK or any recipient's KEK | `vault.uvf` | every seed, i.e. the entire vault |
+
+Keys are derived top-down only. No derived key reveals the seed it came from, and no seed reveals another, so exposure never propagates upwards or sideways in this hierarchy.
+
+The same bound applies to cryptographic misuse within a format, such as a nonce collision under a file key: AEAD nonce reuse breaks the mode for the affected messages, not the cipher, so it reveals or allows forging the colliding blocks of that file but neither the file key nor anything above it (see the format's security considerations, e.g. [AES-256-GCM](file%20content%20encryption/AES-256-GCM.md#security-considerations)).
+
 ### Key rotation does not re-key existing data
 
 Rotation appends a seed and advances `latestSeed`.
