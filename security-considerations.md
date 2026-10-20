@@ -82,15 +82,14 @@ An active provider (T2) that retains earlier versions can therefore, undetectabl
 * roll a single file back to earlier content (same node identity → passes every check),
 * roll individual chunks of a file back to an earlier version, splicing old and new content or shortening the file to an earlier version's length, provided the file header was retained when the file was modified (chunks are bound to their file and position, but not to a version),
 * roll a symlink back to an earlier target,
-* restore an earlier `vault.uvf` — reverting `latestSeed` and dropping seeds added since — thereby undoing a key rotation, or
+* restore an earlier `vault.uvf` — reverting `latestSeed` and dropping seeds added since — thereby undoing a key rotation or a recipient removal, unless the client has observed the newer version (see [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning)), or
 * restore an earlier self-consistent snapshot of the whole vault.
 
 This is the fork/rollback-consistency limitation inherent to per-file, sync-oriented encryption: a version counter inside per-file authenticated data is defeated by rolling back the entire snapshot.
 Chunk-level rollback is an accepted risk: the adversary cannot read the chunks it splices, so the result is vandalism rather than a targeted modification.
 
 > [!IMPORTANT]
-> Applications that require rollback resistance MUST maintain monotonic state out of band — at minimum, persisting the highest seed count / version seen and rejecting a `vault.uvf` that regresses.
-> This is outside the pure file format.
+> Rollback of `vault.uvf` is the one case the format does address, because it would let an adversary steer clients towards writing new data under a seed it knows. Clients MUST pin the set of seed IDs they have observed, as specified in [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning). Rollback of individual files or of the whole vault snapshot remains undetected.
 
 ### Truncation and the EOF block
 
@@ -132,7 +131,7 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
 Sharing a vault is full mutual trust.
 
-Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of the previous CEK and all previous seeds.
+Removing a recipient requires a new Content Encryption Key and a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of the previous CEK and all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
 
 ### Cryptographic agility and quantum resistance
