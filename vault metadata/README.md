@@ -159,8 +159,11 @@ With this version of the UVF specification, the payload MUST contain at least th
     "kdf": "HKDF-SHA512",
     "kdfSalt": "NIlr89R7FhochyP4yuXZmDqCnQ0dBB3UZ2D-6oiIjr8",
     "recipientDetails": {
-        "com.example.vaultpassword": {},
+        "com.example.vaultpassword": {
+            "alg": "PBES2-HS512+A256KW"
+        },
         "com.example.userkey.42": {
+            "alg": "ECDH-ES+A256KW",
             "jwk": { "kty": "OKP", "crv": "X25519", "x": "..." }
         }
     },
@@ -185,11 +188,12 @@ Deriving IDs from seed values makes concurrent additions mergeable: the union of
 
 `recipientDetails` holds, for every element of the `recipients` array, an object keyed by the recipient's `kid`:
 
-* For recipients whose `alg` wraps the CEK with a public key, the object MUST contain the recipient's public key as a JWK ([RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517)) in a `jwk` member.
+* The object MUST contain the recipient's key management algorithm in an `alg` member, equal to the `alg` of the recipient's unprotected header.
+* For recipients whose `alg` wraps the CEK with a public key, the object MUST contain the recipient's public key as a JWK ([RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517)) in a `jwk` member. If the JWK contains an `alg` member, it MUST equal the object's `alg`.
 * For recipients whose `alg` uses a symmetric KEK, the object MUST NOT contain a `jwk` member.
-* Further members MAY be added for vendor-specific use, using reverse domain name notation.
+* Further members MAY be added for vendor-specific use, using reverse domain name notation, e.g. to commit the parameters of a password-based key derivation.
 
-The recipient list is part of the encrypted payload for two reasons. First, the per-recipient unprotected headers are not covered by the JWE integrity protection, so an adversary with write access to the storage could replace a recipient's public key by its own and the next client writing the file would wrap the CEK for the adversary. Second, whoever knows a recipient's public key can author a `vault.uvf` that this recipient will decrypt successfully. Public keys of recipients are therefore confidential to the vault's members: they MUST NOT be stored in any unencrypted part of the file and MUST NOT be disclosed beyond the parties entitled to write `vault.uvf`. When wrapping the CEK, clients use only the public keys from `recipientDetails` (see [Writing](../implementation-notes.md#writing)).
+The recipient list is part of the encrypted payload for two reasons. First, the per-recipient unprotected headers are not covered by the JWE integrity protection, so an adversary with write access to the storage could alter them, e.g. replace a recipient's public key by its own so that the next client writing the file wraps the CEK for the adversary, or downgrade a recipient's `alg` and key derivation parameters. Second, whoever knows a recipient's public key can author a `vault.uvf` that this recipient will decrypt successfully. Public keys of recipients are therefore confidential to the vault's members: they MUST NOT be stored in any unencrypted part of the file and MUST NOT be disclosed beyond the parties entitled to write `vault.uvf`. When wrapping the CEK, clients use only the algorithms and public keys from `recipientDetails` (see [Writing](../implementation-notes.md#writing)).
 
 ## Validation and Writing
 

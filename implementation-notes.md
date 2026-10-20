@@ -12,7 +12,8 @@ Every client MUST validate `vault.uvf` on every unlock, before deriving any key 
 
 * The protected header contains exactly the parameters and values listed in [JOSE Header](vault%20metadata/README.md#jose-header), in particular `zip` is absent and `uvf.spec.version` is supported.
 * Every element of the `recipients` array has a unique `kid`, and the set of these `kid` values equals the set of keys of `recipientDetails` in the payload.
-* Every entry of `recipientDetails` contains a `jwk` if and only if the corresponding recipient's `alg` wraps the CEK with a public key.
+* Every element of the `recipients` array has an `alg` equal to the `alg` of its `recipientDetails` entry.
+* Every entry of `recipientDetails` contains a `jwk` if and only if its `alg` wraps the CEK with a public key, and if that `jwk` has an `alg` member, it equals the entry's `alg`.
 * `seeds` is not empty, every seed is 32 bytes long, and every ID equals the first 4 bytes of `kdf(seed, 32, "seedDigest")` for its seed (see [Seed IDs](vault%20metadata/README.md#seed-ids)).
 * `initialSeed` and `latestSeed` reference IDs present in `seeds`.
 * `kdfSalt` is 32 bytes long.
@@ -39,7 +40,7 @@ A client MUST only write `vault.uvf` based on a version it has read and [validat
 
 1. generate a fresh random CEK and a fresh random `iv`,
 2. wrap the CEK for every recipient listed in the validated `recipientDetails`, plus recipients the client adds, minus recipients the client removes,
-3. use only the public keys contained in the validated `recipientDetails` for wrapping; adding a recipient means adding its `recipientDetails` entry and its `recipients` element in the same write,
+3. use only the algorithms and public keys contained in the validated `recipientDetails` for wrapping, never values from the unprotected headers; adding a recipient means adding its `recipientDetails` entry and its `recipients` element in the same write,
 4. carry over all seeds of the validated version, since `seeds` is append-only,
 5. when removing a recipient, add a new seed and set it as `latestSeed` in the same write (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
 
@@ -50,6 +51,8 @@ When adding a seed, a client MUST draw a new seed if the derived ID already exis
 ### Key Derivation Parameters
 
 Parameters of password-based KEK derivation such as `p2c` or an application's Argon2 parameters are read from the unprotected header before any integrity check is possible. Tampering with them can only cause the unlock to fail, but clients SHOULD bound such parameters to avoid being driven into excessive memory or CPU consumption.
+
+When re-wrapping the CEK for such a recipient, a client MUST NOT copy these parameters from the unprotected header. It uses parameters it chose itself or, if the application commits them as vendor-specific members of the recipient's `recipientDetails` entry, the committed ones.
 
 ## File Content
 
