@@ -11,14 +11,12 @@ This data is immutable and therefore linked with a directory eternally, survivin
 1. Within the parent dir (except for root), where it serves a link to the child dir
 2. In the child dir itself (allowing disaster recovery without the parent). 
 
-Both copies contain the same `dirId` and reference the same seed ID. During traversal, only the copy within the parent dir is used; the copy within the child dir is used for recovery only.
+Both copies contain the same `dirId` and reference the same seed ID. During traversal, only the copy within the parent dir is used; the copy within the child dir is used for recovery only (see [Implementation Notes](#implementation-notes)).
 
 > [!NOTE] Disaster recovery without the parent
 > Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
 > all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
 > within the lost parent dir.
->
-> When recovering from the copy within the child dir, an application MUST verify that the [path derived](#mapping-directory-ids-to-paths) from the recovered seed and `dirId` equals the path the copy was found under.
 
 The exact file structure of `dir.uvf` will be discussed in more detail [below](#format-of-diruvf-and-symlinkuvf).
 
@@ -103,7 +101,7 @@ let ciphertext = aesSiv(secret: cleartextName, ad: parentDirId, key: sivKey)
 let ciphertextName = base64url(data: ciphertext) + '.uvf'
 ```
 
-When decrypting, the base64url decoder MUST reject padding characters, characters outside the base64url alphabet, and non-zero trailing bits, so that every ciphertext has exactly one encoded representation and the file system's name uniqueness applies to it.
+Decoding MUST be canonical, see [Implementation Notes](#implementation-notes).
 
 ## Ciphertext Directory Structure
 
@@ -117,15 +115,13 @@ Depending on the [type of a cleartext node](README.md#node-types), the encrypted
 | directory           | directory containing `dir.uvf`      |
 | symlink             | directory containing `symlink.uvf`  |
 
-A ciphertext directory containing both `dir.uvf` and `symlink.uvf`, or neither, MUST be treated as invalid.
-
 ### Format of `dir.uvf` and `symlink.uvf`
 
 `dir.uvf` is the directory metadata object and `symlink.uvf` the symlink metadata object of this format. Both are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault, with the header key derived using the KDF context `dirHeader` or `symlinkHeader` respectively (see [General requirements](../file%20content%20encryption/README.md#general-requirements)).
 
-The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory. A `dir.uvf` whose cleartext is not exactly 32 bytes long MUST be rejected.
+The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory.
 
-The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink. See [Validation of Decrypted Names and Symlink Targets](README.md#validation-of-decrypted-names-and-symlink-targets) for how applications treat decrypted names and targets.
+The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink. See [Implementation Notes](../implementation-notes.md#file-names) for how applications treat decrypted names and targets.
 
 > [!CAUTION]
 > Every `*.uvf` file MUST be encrypted independently, particularly the two `dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.
@@ -279,6 +275,15 @@ flowchart TD
    fileContentEncryption --> dirUvf
    dirUvf["directory metadata dir.uvf content"]
 ```
+
+## Implementation Notes
+
+These rules apply in addition to the general [Implementation Notes](../implementation-notes.md).
+
+* **Canonical decoding.** When decoding a ciphertext name, the base64url decoder MUST reject padding characters, characters outside the base64url alphabet, and non-zero trailing bits, so that every ciphertext has exactly one encoded representation and the file system's name uniqueness applies to it.
+* **Directory metadata.** A `dir.uvf` whose cleartext is not exactly 32 bytes long MUST be rejected.
+* **Node type.** A ciphertext directory containing both `dir.uvf` and `symlink.uvf`, or neither, MUST be treated as invalid.
+* **Metadata copies.** During traversal, only the `dir.uvf` copy within the parent directory is used. When recovering from the copy within the child directory, an application MUST verify that the [path derived](#mapping-directory-ids-to-paths) from the recovered seed and `dirId` equals the path the copy was found under.
 
 ## Security Considerations
 

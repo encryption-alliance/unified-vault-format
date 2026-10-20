@@ -82,14 +82,23 @@ An active provider (T2) that retains earlier versions can therefore, undetectabl
 * roll a single file back to earlier content (same node identity → passes every check),
 * roll individual chunks of a file back to an earlier version, splicing old and new content or shortening the file to an earlier version's length, provided the file header was retained when the file was modified (chunks are bound to their file and position, but not to a version),
 * roll a symlink back to an earlier target,
-* restore an earlier `vault.uvf` — reverting `latestSeed` and dropping seeds added since — thereby undoing a key rotation or a recipient removal, unless the client has observed the newer version (see [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning)), or
+* restore an earlier `vault.uvf` — reverting `latestSeed` and dropping seeds added since — thereby undoing a key rotation or a recipient removal, unless the client has observed the newer version (see [Seed Pinning](implementation-notes.md#seed-pinning)), or
 * restore an earlier self-consistent snapshot of the whole vault.
 
 This is the fork/rollback-consistency limitation inherent to per-file, sync-oriented encryption: a version counter inside per-file authenticated data is defeated by rolling back the entire snapshot.
 Chunk-level rollback is an accepted risk: the adversary cannot read the chunks it splices, so the result is vandalism rather than a targeted modification.
 
 > [!IMPORTANT]
-> Rollback of `vault.uvf` is the one case the format does address, because it would let an adversary steer clients towards writing new data under a seed it knows. Clients MUST pin the set of seed IDs they have observed, as specified in [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning). Rollback of individual files or of the whole vault snapshot remains undetected.
+> Rollback of `vault.uvf` is the one case the format does address, because it would let an adversary steer clients towards writing new data under a seed it knows. Clients MUST pin the digests of the seeds they have observed, as specified in [Seed Pinning](implementation-notes.md#seed-pinning). Rollback of individual files or of the whole vault snapshot remains undetected.
+
+### Forged vault metadata
+
+A JWE provides no proof of who created it. Whoever holds a recipient's public key can author a `vault.uvf` of their choosing that this recipient decrypts successfully, containing seeds the author knows. The format limits who can do so and makes the result detectable:
+
+* Recipient public keys are part of the encrypted payload and confidential to the vault's members (see [Recipient Details](vault%20metadata/README.md#recipient-details)). A keyless adversary (T1/T2) therefore cannot author `vault.uvf` at all; it is limited to rolling back genuine versions.
+* A former member knows the public keys and all seeds of its membership period. It can author a `vault.uvf` that contains the genuine old seeds, so that the vault appears intact, plus seeds of its own choosing under IDs colliding with those it reads from post-removal file headers, which is cheap for 4-byte IDs. [Seed Pinning](implementation-notes.md#seed-pinning) therefore pins the 32-byte seed digest rather than the ID: a forged file cannot contain a seed matching the digest of a seed the author does not know, so any client that has observed the genuine post-removal `vault.uvf` rejects the forgery, just as it rejects a rollback.
+
+The residual risk is a client without pins, i.e. a first-time or long-offline client, facing a former member with write access to the storage. Such a client cannot distinguish a genuine `vault.uvf` from a forged or rolled-back one by inspection; it needs the expected seed digests from a source independent of the storage, see the note under [Seed Pinning](implementation-notes.md#seed-pinning).
 
 ### Truncation and the EOF block
 
@@ -140,7 +149,7 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 
 > [!IMPORTANT]
 > Recovering confidentiality after a seed compromise requires re-encrypting affected data under a fresh seed; rotation alone does not achieve this.
-> A compromised KEK additionally exposes the Content Encryption Key of the `vault.uvf` it unlocks. Every write of `vault.uvf` uses a fresh CEK (see [Writing](vault%20metadata/README.md#writing)), so this exposure ends with the next write that no longer wraps the CEK for the compromised KEK, but the seeds contained in the exposed payload remain known (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
+> A compromised KEK additionally exposes the Content Encryption Key of the `vault.uvf` it unlocks. Every write of `vault.uvf` uses a fresh CEK (see [Writing](implementation-notes.md#writing)), so this exposure ends with the next write that no longer wraps the CEK for the compromised KEK, but the seeds contained in the exposed payload remain known (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
 
 ### Shared vaults and malicious recipients
 
@@ -148,7 +157,7 @@ In a multi-recipient vault the Content Encryption Key is shared: every recipient
 Sharing a vault is full mutual trust with respect to the vault's contents.
 It is not trust in the other recipient's machine: a recipient can craft names or symlink targets that would escape the vault's cleartext root on another recipient's endpoint, which is why decrypted names and targets are validated (see [Validation of Decrypted Names and Symlink Targets](file%20name%20encryption/README.md#validation-of-decrypted-names-and-symlink-targets)).
 
-Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning).
+Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed Pinning](implementation-notes.md#seed-pinning) (see [Forged vault metadata](#forged-vault-metadata)).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
 
 ### Cryptographic agility and quantum resistance

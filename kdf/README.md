@@ -23,7 +23,7 @@ The context separates the keys derived from one seed. The following contexts are
 
 | Context | Output length | Defined in |
 |---|---|---|
-| `seedId` | 4 | [vault metadata](../vault%20metadata/README.md#seed-ids) |
+| `seedDigest` | 32 | [vault metadata](../vault%20metadata/README.md#seed-ids) |
 | `rootDirId` | 32 | [AES-SIV-512-B64URL](../file%20name%20encryption/AES-SIV-512-B64URL.md#directory-id) |
 | `fileHeader`, `dirHeader`, `symlinkHeader` | 32 | [file content encryption](../file%20content%20encryption/README.md#general-requirements) |
 | `siv`, `hmac` | 64 | [AES-SIV-512-B64URL](../file%20name%20encryption/AES-SIV-512-B64URL.md#deriving-encryption-keys) |

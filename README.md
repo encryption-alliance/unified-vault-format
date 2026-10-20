@@ -27,6 +27,7 @@ The standardization process is supported by some well-known FOSS products that s
 ## Contribute
 * :memo: Read about of [Design Requirements](Requirements.md)
 * :lock: Read the [Threat Model and Security Considerations](security-considerations.md)
+* :white_check_mark: Read the [Implementation Notes](implementation-notes.md) for the checks and constraints a client must observe
 * :speech_balloon: Join our [discussions](https://github.com/encryption-alliance/unified-vault-format/discussions)
 * :speaking_head: Invite other tool vendors to join the effort
 * :stethoscope:	Security audits and enhancements are highly welcome :wink:
