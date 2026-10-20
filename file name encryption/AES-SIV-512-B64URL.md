@@ -116,9 +116,9 @@ Depending on the kind of a cleartext node, the encrypted name is then either use
 
 Both, `dir.uvf` and `symlink.uvf` files are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault.
 
-The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory.
+The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory. A `dir.uvf` whose cleartext is not exactly 32 bytes long MUST be rejected.
 
-The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink.
+The cleartext content of `symlink.uvf` is an UTF-8 string in Normalization Form C, denoting the cleartext target of the symlink. See [Validation of Decrypted Names and Symlink Targets](README.md#validation-of-decrypted-names-and-symlink-targets) for how applications treat decrypted names and targets.
 
 > [!CAUTION]
 > Every `*.uvf` file MUST be encrypted independently, particularly the two `dir.uvf` copies that contain the same dirId. This is required for indistinguishable ciphertexts, avoiding the leakage of the nested dir structure.

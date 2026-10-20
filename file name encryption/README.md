@@ -18,6 +18,18 @@ All current and future formats must fulfil the following requirements:
   This is required for stable lookup, O(1) file-system collision detection, version restoration and efficient directory listing.
 * A format **MUST** bind the ciphertext name to the parent `dirId`, so that a name cannot be moved to another directory undetected.
 
+## Validation of Decrypted Names and Symlink Targets
+
+Decrypted names and symlink targets are untrusted input: another recipient of a shared vault can store arbitrary values, and the storage provider can replay existing objects into other positions. Before exposing a decrypted name to the file system, an application MUST reject it if it
+
+* is empty,
+* equals `.` or `..`,
+* contains `/` or a NUL byte.
+
+Applications MUST additionally reject names that are invalid on the local file system, e.g. containing `\` or `:` where applicable.
+
+Symlink targets are stored verbatim and may legitimately point outside the vault. Applications SHOULD validate symlink targets and warn the user on first use if the target points outside the vault.
+
 ## Possible Future Formats
 
 > [!NOTE]

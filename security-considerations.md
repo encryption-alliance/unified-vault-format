@@ -129,7 +129,8 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 ### Shared vaults and malicious recipients
 
 In a multi-recipient vault the Content Encryption Key is shared: every recipient can derive every seed and thus decrypt the entire vault, and — holding valid keys — can also produce valid new ciphertext (T3).
-Sharing a vault is full mutual trust.
+Sharing a vault is full mutual trust with respect to the vault's contents.
+It is not trust in the other recipient's machine: a recipient can craft names or symlink targets that would escape the vault's cleartext root on another recipient's endpoint, which is why decrypted names and targets are validated (see [Validation of Decrypted Names and Symlink Targets](file%20name%20encryption/README.md#validation-of-decrypted-names-and-symlink-targets)).
 
 Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed ID Pinning](vault%20metadata/README.md#seed-id-pinning).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
