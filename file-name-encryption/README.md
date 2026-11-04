@@ -2,7 +2,7 @@
 
 ## Approved File Name Formats
 
-File name formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `nameFormat` field.
+File name formats are specified by the [vault metadata file](../vault-metadata/README.md) in its `nameFormat` field.
 
 This is an exhaustive list of file name formats that have been defined in this version of the specification and MUST be supported by conforming applications:
 
@@ -16,11 +16,11 @@ A cleartext node is one of the following types:
 
 | Node type | Cleartext | Encrypted representation |
 |---|---|---|
-| regular file | content | an encrypted file, see [file content encryption](../file%20content%20encryption/README.md) |
+| regular file | content | an encrypted file, see [file content encryption](../file-content-encryption/README.md) |
 | directory | its children | defined by the name format, typically including a directory metadata object |
 | symlink | its target | defined by the name format, typically a symlink metadata object holding the target |
 
-A name format defines how directories and symlinks are represented in the ciphertext structure and which metadata objects it stores for them. Such metadata objects MUST be encrypted using the vault's content encryption format, with the header key derived for the respective node type (see [General requirements](../file%20content%20encryption/README.md#general-requirements) of file content encryption).
+A name format defines how directories and symlinks are represented in the ciphertext structure and which metadata objects it stores for them. Such metadata objects MUST be encrypted using the vault's content encryption format, with the header key derived for the respective node type (see [General requirements](../file-content-encryption/README.md#general-requirements) of file content encryption).
 
 ## General requirements
 

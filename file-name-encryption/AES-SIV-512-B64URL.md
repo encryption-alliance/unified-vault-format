@@ -13,7 +13,8 @@ This data is immutable and therefore linked with a directory eternally, survivin
 
 Both copies contain the same `dirId` and reference the same seed ID. During traversal, only the copy within the parent dir is used; the copy within the child dir is used for recovery only (see [Implementation Notes](#implementation-notes)).
 
-> [!NOTE] Disaster recovery without the parent
+> [!NOTE]
+> **Disaster recovery without the parent:**
 > Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
 > all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
 > within the lost parent dir.
@@ -22,9 +23,9 @@ The exact file structure of `dir.uvf` will be discussed in more detail [below](#
 
 ### Directory Seed
 
-At creation time, a directory's seed is always the `latestSeed` as defined in the [vault metadata file](../vault%20metadata/README.md#encrypted-content). In case of the root directory this happens to also be the `initialSeed`.
+At creation time, a directory's seed is always the `latestSeed` as defined in the [vault metadata file](../vault-metadata/README.md#encrypted-content). In case of the root directory this happens to also be the `initialSeed`.
 
-When navigating into a directory, the seed is read from the corresponding `dir.uvf`'s file header. More precisely, the header contains the seed ID, and the seed can then be looked up in the `seeds` in [vault metadata file](../vault%20metadata/README.md#encrypted-content).
+When navigating into a directory, the seed is read from the corresponding `dir.uvf`'s file header. More precisely, the header contains the seed ID, and the seed can then be looked up in the `seeds` in [vault metadata file](../vault-metadata/README.md#encrypted-content).
 
 > [!NOTE]
 > A directory's seed is used to derive file name encryption keys used to encrypt the directory's direct children's names. Since the seed is immutable, new child nodes added at a later time will use the same file name encryption keys as old children.
@@ -117,7 +118,7 @@ Depending on the [type of a cleartext node](README.md#node-types), the encrypted
 
 ### Format of `dir.uvf` and `symlink.uvf`
 
-`dir.uvf` is the directory metadata object and `symlink.uvf` the symlink metadata object of this format. Both are encrypted using the [content encryption mechanism](../file%20content%20encryption/README.md) configured for the vault, with the header key derived using the KDF context `dirHeader` or `symlinkHeader` respectively (see [General requirements](../file%20content%20encryption/README.md#general-requirements)).
+`dir.uvf` is the directory metadata object and `symlink.uvf` the symlink metadata object of this format. Both are encrypted using the [content encryption mechanism](../file-content-encryption/README.md) configured for the vault, with the header key derived using the KDF context `dirHeader` or `symlinkHeader` respectively (see [General requirements](../file-content-encryption/README.md#general-requirements)).
 
 The cleartext content of `dir.uvf` is the 32 byte dirId. The seed referenced by this file's header doubles as the seed of the child directory.
 

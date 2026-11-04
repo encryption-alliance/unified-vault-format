@@ -17,7 +17,7 @@ The checks a client performs on the file header are specified in the [Implementa
 
 ## File Formats
 
-File formats are specified by the [vault metadata file](../vault%20metadata/README.md) in its `fileFormat` field.
+File formats are specified by the [vault metadata file](../vault-metadata/README.md) in its `fileFormat` field.
 
 This is an exhaustive list of file body formats that have been defined in this version of the specification and MUST be supported by conforming applications:
 
@@ -35,7 +35,7 @@ This is an exhaustive list of file body formats that have been defined in this v
 All current and future formats must fulfil the following requirements:
 
 * [file body formats](#file-formats) MUST be AEAD and MUST authenticate the [general header](#file-header)
-* The key used to encrypt the file header **MUST** be derived from the seed using the [KDF](../kdf/README.md) with a context that depends on the [node type](../file%20name%20encryption/README.md#node-types) the encrypted object belongs to:
+* The key used to encrypt the file header **MUST** be derived from the seed using the [KDF](../kdf/README.md) with a context that depends on the [node type](../file-name-encryption/README.md#node-types) the encrypted object belongs to:
 
   | Encrypted object | KDF context |
   |---|---|
