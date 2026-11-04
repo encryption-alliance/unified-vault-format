@@ -1,13 +1,13 @@
 # File Name Shortening
 
-File name shortening is an **optional middleware** between the file name encryption layer and the underlying storage. It keeps every stored path component short enough for file systems and sync services that limit name lengths (typically 255 bytes), regardless of which [file name encryption](../file%20name%20encryption/README.md) format produced the name.
+File name shortening is an **optional middleware** between the file name encryption layer and the underlying storage. It keeps every stored path component short enough for file systems and sync services that limit name lengths (typically 255 bytes), regardless of which [file name encryption](../file-name-encryption/README.md) format produced the name.
 
 > [!NOTE]
 > This layer involves no cryptography and no keys. It adds no security and serves compatibility only. It operates on already encrypted names and does not need to understand them.
 
 ## Parameters
 
-Shortening is enabled per vault by the `nameShorteningThreshold` field in the [vault metadata file](../vault%20metadata/README.md#encrypted-content). That field also sets the threshold `T`. The application passes `T` to the middleware after unlocking the vault. The middleware itself remains independent of any cryptography.
+Shortening is enabled per vault by the `nameShorteningThreshold` field in the [vault metadata file](../vault-metadata/README.md#encrypted-content). That field also sets the threshold `T`. The application passes `T` to the middleware after unlocking the vault. The middleware itself remains independent of any cryptography.
 
 | Parameter | Value |
 |---|---|

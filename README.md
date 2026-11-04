@@ -25,11 +25,11 @@ The standardization process is supported by some well-known FOSS products that s
 * [rclone](https://github.com/rclone/rclone/)
 
 ## Specification
-* [Vault Metadata](vault%20metadata/README.md)
+* [Vault Metadata](vault-metadata/README.md)
 * [Key Derivation](kdf/README.md)
-* [File Content Encryption](file%20content%20encryption/README.md)
-* [File Name Encryption](file%20name%20encryption/README.md)
-* [File Name Shortening](file%20name%20shortening/README.md) (optional): a cryptography-free middleware between name encryption and storage, which keeps stored names short. It can be combined with any file name encryption format
+* [File Content Encryption](file-content-encryption/README.md)
+* [File Name Encryption](file-name-encryption/README.md)
+* [File Name Shortening](file-name-shortening/README.md) (optional): a cryptography-free middleware between name encryption and storage, which keeps stored names short. It can be combined with any file name encryption format
 
 ## Contribute
 * :memo: Read about of [Design Requirements](Requirements.md)

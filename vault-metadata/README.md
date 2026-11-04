@@ -138,7 +138,7 @@ With this version of the UVF specification, the payload MUST contain at least th
 
 Optionally, the payload MAY contain:
 
-* `nameShorteningThreshold` (immutable): An integer that enables [file name shortening](../file%20name%20shortening/README.md) and sets its threshold `T` in bytes. It MUST be either `-1` or at least 46, and 220 is RECOMMENDED. `-1` explicitly disables shortening, which has the same effect as omitting the field. An application that does not implement file name shortening MUST NOT access a vault in which shortening is enabled
+* `nameShorteningThreshold` (immutable): An integer that enables [file name shortening](../file-name-shortening/README.md) and sets its threshold `T` in bytes. It MUST be either `-1` or at least 46, and 220 is RECOMMENDED. `-1` explicitly disables shortening, which has the same effect as omitting the field. An application that does not implement file name shortening MUST NOT access a vault in which shortening is enabled
 
 > [!NOTE]
 > When values such as a byte sequences have no native representation in JSON, they are base64url-encoded without padding.
