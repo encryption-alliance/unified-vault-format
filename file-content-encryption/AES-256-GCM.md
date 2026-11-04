@@ -8,7 +8,7 @@ Following the [_general header_ fields](README.md), this format requires 60 addi
 * 32 byte encrypted file content key
 * 16 byte tag
 
-The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault%20metadata/README.md). The KDF context `headerContext` is `"fileHeader"`, `"dirHeader"` or `"symlinkHeader"` depending on the node type (see [General requirements](README.md#general-requirements)).
+The header needs to be encrypted using a 256 bit key derived from the seed using the KDF defined in the [vault metadata file](../vault-metadata/README.md). The KDF context `headerContext` is `"fileHeader"`, `"dirHeader"` or `"symlinkHeader"` depending on the node type (see [General requirements](README.md#general-requirements)).
 
 ```ts
 let headerKey = kdf(secret: latestSeed, length: 32, context: headerContext)
@@ -169,6 +169,6 @@ These considerations apply in addition to the general [Threat Model and Security
 * **Header retention.** Modifying a file does not require a new header. Retaining the header (and thus `fileKey` and `headerNonce`) has three consequences:
   * chunks of earlier versions remain valid at their original position and can be spliced into the current version by an adversary retaining old ciphertexts (see [Rollback and replay](../security-considerations.md#rollback-and-replay-no-freshness)),
   * every re-encrypted block draws a fresh random nonce under the same file key. The total number of blocks ever encrypted under a retained header is cumulated across all clients that ever modified the file and cannot be observed by any of them, so the 2^32 limit cannot be enforced. The probability of a nonce collision after N blocks in total is about N² / 2^97, i.e. 2^-33 at 2^32 blocks (about 131,000 complete rewrites of a 1 GiB file). A collision reveals the XOR of the two colliding cleartext blocks and allows forging ciphertext at those two positions; it does not reveal the file key, so the remaining blocks and all other files stay unaffected (see [Compromise granularity](../security-considerations.md#compromise-granularity)). This is an accepted risk of in-place modification,
-  * the file stays under the seed referenced by its header, so key rotation and recipient removal do not apply to content written afterwards (see [Removing Recipients and Compromised KEKs](../vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
+  * the file stays under the seed referenced by its header, so key rotation and recipient removal do not apply to content written afterwards (see [Removing Recipients and Compromised KEKs](../vault-metadata/README.md#removing-recipients-and-compromised-keks)).
 
   Writing a new header on modification, i.e. re-encrypting the whole file under a fresh file key, avoids all three. Applications SHOULD do so where feasible, e.g. for small files, or when the user prefers security over write performance.

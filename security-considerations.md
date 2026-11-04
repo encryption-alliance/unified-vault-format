@@ -3,7 +3,7 @@
 This document describes the adversaries UVF is designed to resist, the properties it does and does not provide, and the residual risks that implementers and users must account for.
 It is normative for implementers only where it uses RFC-2119 keywords; the rest is explanatory.
 
-This document covers the properties of the overall design, independent of the configured formats. Each format specification carries its own *Security Considerations* section with format-specific details such as primitives, usage limits and leakage characteristics; these apply in addition to this document and MUST be observed for the formats in use (see [AES-256-GCM](file%20content%20encryption/AES-256-GCM.md#security-considerations) and [AES-SIV-512-B64URL](file%20name%20encryption/AES-SIV-512-B64URL.md#security-considerations)).
+This document covers the properties of the overall design, independent of the configured formats. Each format specification carries its own *Security Considerations* section with format-specific details such as primitives, usage limits and leakage characteristics; these apply in addition to this document and MUST be observed for the formats in use (see [AES-256-GCM](file-content-encryption/AES-256-GCM.md#security-considerations) and [AES-SIV-512-B64URL](file-name-encryption/AES-SIV-512-B64URL.md#security-considerations)).
 
 > [!NOTE]
 > UVF encrypts each node individually and leans on the underlying file system (see [Design Requirements](Requirements.md)).
@@ -27,11 +27,11 @@ UVF aims to protect the confidentiality and the integrity/authenticity of:
 
 A network attacker with read/write access to the transport is subsumed by T1/T2; securing the transport (e.g. TLS) is the application's responsibility and out of scope.
 
-A **former recipient**, i.e. one that was [removed](vault%20metadata/README.md#removing-recipients-and-compromised-keks) from the vault, typically retains write access to the storage and thus combines the capabilities of T2 with knowledge of every key and public key of its membership period. It is the adversary that [Seed Pinning](implementation-notes.md#seed-pinning) is designed against (see [Forged vault metadata](#forged-vault-metadata)).
+A **former recipient**, i.e. one that was [removed](vault-metadata/README.md#removing-recipients-and-compromised-keks) from the vault, typically retains write access to the storage and thus combines the capabilities of T2 with knowledge of every key and public key of its membership period. It is the adversary that [Seed Pinning](implementation-notes.md#seed-pinning) is designed against (see [Forged vault metadata](#forged-vault-metadata)).
 
 ### Trust assumptions (out of scope)
 
-* **Key material retrieval is sound.** How each recipient's key decapsulates the JWE Content Encryption Key (the KEK workflow) is application-specific and assumed correct; see [Vault Metadata](vault%20metadata/README.md).
+* **Key material retrieval is sound.** How each recipient's key decapsulates the JWE Content Encryption Key (the KEK workflow) is application-specific and assumed correct; see [Vault Metadata](vault-metadata/README.md).
 * **The cryptographic primitives are secure** (for the configured content encryption, name encryption and KDF), and the CSPRNG used for seeds, dirIds, keys, and nonces is cryptographically strong.
 * **The client endpoint is trusted** — its memory, its random source, its persisted state such as [seed pins](implementation-notes.md#seed-pinning), and its correct implementation of this spec. Endpoint compromise and side channels (timing, cache) are out of scope.
 * **Availability is not guaranteed.** An active provider (T2) can always withhold, corrupt, or delete data; denial of service is out of scope.
@@ -71,7 +71,7 @@ A keyless adversary is limited to **replaying the user's own existing objects**;
 ### Directory relocation
 
 A node's type is inferred from structure (a plain file; a directory containing `dir.uvf`; a directory containing `symlink.uvf`), and a directory's subtree is located from the `dirId` read out of its `dir.uvf`.
-The node type is bound to the object through the header key's KDF context (see [General requirements](file%20content%20encryption/README.md#general-requirements)), so a regular file cannot be presented as a symlink target or as directory metadata, and vice versa.
+The node type is bound to the object through the header key's KDF context (see [General requirements](file-content-encryption/README.md#general-requirements)), so a regular file cannot be presented as a symlink target or as directory metadata, and vice versa.
 Nothing binds the `dirId` to the name slot the node occupies, though.
 An active provider (T2) can therefore relocate one directory's subtree under another name, or make two names point to the same subtree, by substituting a `dir.uvf` harvested elsewhere in the same vault.
 
@@ -97,14 +97,14 @@ Chunk-level rollback is an accepted risk: the adversary cannot read the chunks i
 
 A JWE provides no proof of who created it. Whoever holds a recipient's public key can author a `vault.uvf` of their choosing that this recipient decrypts successfully, containing seeds the author knows. The format limits who can do so and makes the result detectable:
 
-* Recipient public keys are part of the encrypted payload and confidential to the vault's members (see [Recipient Details](vault%20metadata/README.md#recipient-details)). A keyless adversary (T1/T2) therefore cannot author `vault.uvf` at all; it is limited to rolling back genuine versions.
+* Recipient public keys are part of the encrypted payload and confidential to the vault's members (see [Recipient Details](vault-metadata/README.md#recipient-details)). A keyless adversary (T1/T2) therefore cannot author `vault.uvf` at all; it is limited to rolling back genuine versions.
 * A former member knows the public keys and all seeds of its membership period. It can author a `vault.uvf` that contains the genuine old seeds, so that the vault appears intact, plus seeds of its own choosing under IDs colliding with those it reads from post-removal file headers, which is cheap for 4-byte IDs. [Seed Pinning](implementation-notes.md#seed-pinning) therefore pins the 32-byte seed digest rather than the ID: a forged file cannot contain a seed matching the digest of a seed the author does not know, so any client that has observed the genuine post-removal `vault.uvf` rejects the forgery, just as it rejects a rollback.
 
 The residual risk is a client without pins, i.e. a first-time or long-offline client, facing a former member with write access to the storage. Such a client cannot distinguish a genuine `vault.uvf` from a forged or rolled-back one by inspection; it needs the expected seed digests from a source independent of the storage, see the note under [Seed Pinning](implementation-notes.md#seed-pinning).
 
 ### Truncation and the EOF block
 
-A zero-byte EOF block is appended whenever the final data block is full (and the empty file consists of the EOF block alone), letting a decryptor authenticate the exact cleartext size — see the encoder and decoder rules under [General requirements](file%20content%20encryption/README.md#general-requirements).
+A zero-byte EOF block is appended whenever the final data block is full (and the empty file consists of the EOF block alone), letting a decryptor authenticate the exact cleartext size — see the encoder and decoder rules under [General requirements](file-content-encryption/README.md#general-requirements).
 The property holds because decryptors are **required** to enforce it: a conforming decryptor MUST reject a file whose final data block is full but is not followed by the EOF block (truncation), and MUST reject a zero-byte block in any other position.
 An active provider (T2) that strips trailing blocks therefore yields a file that fails validation rather than one that silently decrypts short.
 
@@ -139,7 +139,7 @@ The key hierarchy bounds what the exposure or misuse of a single key reveals:
 
 Keys are derived top-down only. No derived key reveals the seed it came from, and no seed reveals another, so exposure never propagates upwards or sideways in this hierarchy.
 
-The same bound applies to cryptographic misuse within a format, such as a nonce collision under a file key: AEAD nonce reuse breaks the mode for the affected messages, not the cipher, so it reveals or allows forging the colliding blocks of that file but neither the file key nor anything above it (see the format's security considerations, e.g. [AES-256-GCM](file%20content%20encryption/AES-256-GCM.md#security-considerations)).
+The same bound applies to cryptographic misuse within a format, such as a nonce collision under a file key: AEAD nonce reuse breaks the mode for the affected messages, not the cipher, so it reveals or allows forging the colliding blocks of that file but neither the file key nor anything above it (see the format's security considerations, e.g. [AES-256-GCM](file-content-encryption/AES-256-GCM.md#security-considerations)).
 
 ### Key rotation does not re-key existing data
 
@@ -151,7 +151,7 @@ Rotation therefore provides **no forward secrecy and no remediation for a leaked
 
 > [!IMPORTANT]
 > Recovering confidentiality after a seed compromise requires re-encrypting affected data under a fresh seed; rotation alone does not achieve this.
-> A compromised KEK additionally exposes the Content Encryption Key of the `vault.uvf` it unlocks. Every write of `vault.uvf` uses a fresh CEK (see [Writing](implementation-notes.md#writing)), so this exposure ends with the next write that no longer wraps the CEK for the compromised KEK, but the seeds contained in the exposed payload remain known (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)).
+> A compromised KEK additionally exposes the Content Encryption Key of the `vault.uvf` it unlocks. Every write of `vault.uvf` uses a fresh CEK (see [Writing](implementation-notes.md#writing)), so this exposure ends with the next write that no longer wraps the CEK for the compromised KEK, but the seeds contained in the exposed payload remain known (see [Removing Recipients and Compromised KEKs](vault-metadata/README.md#removing-recipients-and-compromised-keks)).
 
 ### Shared vaults and malicious recipients
 
@@ -159,7 +159,7 @@ In a multi-recipient vault the Content Encryption Key is shared: every recipient
 Sharing a vault is full mutual trust with respect to the vault's contents.
 It is not trust in the other recipient's machine: a recipient can craft names or symlink targets that would escape the vault's cleartext root on another recipient's endpoint, which is why decrypted names and targets are validated (see [Decrypted Names](implementation-notes.md#decrypted-names) and [Symlink Targets](implementation-notes.md#symlink-targets)).
 
-Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault%20metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed Pinning](implementation-notes.md#seed-pinning) (see [Forged vault metadata](#forged-vault-metadata)).
+Removing a recipient requires a new seed (see [Removing Recipients and Compromised KEKs](vault-metadata/README.md#removing-recipients-and-compromised-keks)), since the former recipient retains knowledge of all previous seeds. A former recipient typically also retains write access to the storage and can therefore act as T2 with knowledge of all previous keys; the removal is only effective against such an adversary if the remaining clients enforce [Seed Pinning](implementation-notes.md#seed-pinning) (see [Forged vault metadata](#forged-vault-metadata)).
 Per the section above, this does not retroactively protect data that the former recipient could already read, and the former recipient can continue to decrypt names of nodes added to pre-existing directories as well as content written to pre-existing files under a retained header.
 
 ### Cryptographic agility and quantum resistance
