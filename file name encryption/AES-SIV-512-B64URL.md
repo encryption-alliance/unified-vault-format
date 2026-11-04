@@ -13,7 +13,8 @@ This data is immutable and therefore linked with a directory eternally, survivin
 
 Both copies contain the same `dirId` and reference the same seed ID. During traversal, only the copy within the parent dir is used; the copy within the child dir is used for recovery only (see [Implementation Notes](#implementation-notes)).
 
-> [!NOTE] Disaster recovery without the parent
+> [!NOTE]
+> **Disaster recovery without the parent:**
 > Imagine cleartext folder structure `a/b/c/` but sync fails and `a/b/` gets lost. With this information, `?/?/c/` and 
 > all its children can still be recovered. The `dirId` required for name decryption would otherwise only be available 
 > within the lost parent dir.
