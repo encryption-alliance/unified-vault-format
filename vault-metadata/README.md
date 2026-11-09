@@ -136,6 +136,10 @@ With this version of the UVF specification, the payload MUST contain at least th
 * `kdfSalt` (immutable): A 32 byte random value for salting the [KDF](../kdf/README.md) which can in turn be used to generate further salts or IVs, avoiding reuse
 * `recipientDetails`: A map of `kid` values to per-recipient details, see [Recipient Details](#recipient-details)
 
+Optionally, the payload MAY contain:
+
+* `nameShorteningThreshold` (immutable): An integer that enables [file name shortening](../file-name-shortening/README.md) and sets its threshold `T` in bytes. It MUST be either `-1` or at least 46, and 220 is RECOMMENDED. `-1` explicitly disables shortening, which has the same effect as omitting the field. An application that does not implement file name shortening MUST NOT access a vault in which shortening is enabled
+
 > [!NOTE]
 > When values such as a byte sequences have no native representation in JSON, they are base64url-encoded without padding.
 
@@ -158,6 +162,7 @@ With this version of the UVF specification, the payload MUST contain at least th
     "latestSeed": "q8ZMqw",
     "kdf": "HKDF-SHA512",
     "kdfSalt": "NIlr89R7FhochyP4yuXZmDqCnQ0dBB3UZ2D-6oiIjr8",
+    "nameShorteningThreshold": 220,
     "recipientDetails": {
         "com.example.vaultpassword": {
             "alg": "PBES2-HS512+A256KW"

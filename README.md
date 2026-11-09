@@ -24,6 +24,13 @@ The standardization process is supported by some well-known FOSS products that s
 * [gocryptfs](https://github.com/rfjakob/gocryptfs/)
 * [rclone](https://github.com/rclone/rclone/)
 
+## Specification
+* [Vault Metadata](vault-metadata/README.md)
+* [Key Derivation](kdf/README.md)
+* [File Content Encryption](file-content-encryption/README.md)
+* [File Name Encryption](file-name-encryption/README.md)
+* [File Name Shortening](file-name-shortening/README.md) (optional): a cryptography-free middleware between name encryption and storage, which keeps stored names short. It can be combined with any file name encryption format whose names do not use the [reserved suffixes](file-name-shortening/README.md#implementation-notes)
+
 ## Contribute
 * :memo: Read about of [Design Requirements](Requirements.md)
 * :lock: Read the [Threat Model and Security Considerations](security-considerations.md)
