@@ -29,7 +29,7 @@ function isLong(name: string): boolean {
 }
 
 function shortName(name: string): string {
-  let hash = sha256(utf8(name))[0..20]
+  let hash = sha256(utf8(name))[0..20] // leftmost 20 bytes (160 bits)
   return base32(hash)
 }
 
@@ -71,7 +71,7 @@ d/BZ/R4VZSS5PEF7TU3PMFIMON5GJRNBDWA
 function list(dir: Path): string[] {
   let result = []
   for (let entry of storage.list(dir)) {
-    if (entry.matches(/^[A-Z2-7]{32}\.original\.uvf$/)) continue // hidden
+    if (/^[A-Z2-7]{32}\.original\.uvf$/.test(entry)) continue // hidden
     let m = entry.match(/^([A-Z2-7]{32})\.shortened\.uvf$/)
     if (m) {
       let name = utf8Decode(storage.read(dir + '/' + m[1] + '.original.uvf'))
