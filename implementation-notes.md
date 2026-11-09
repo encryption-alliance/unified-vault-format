@@ -72,9 +72,12 @@ Decrypted names are untrusted input: another recipient of a shared vault can sto
 
 * is empty,
 * equals `.` or `..`,
-* contains `/` or a NUL byte.
+* contains `/` or a NUL byte,
+* is not in Unicode [Normalization Form C](https://unicode.org/reports/tr15/#Norm_Forms).
 
 Applications MUST additionally reject names that are invalid on the local file system, e.g. containing `\` or `:` where applicable.
+
+The NFC rule follows from name encryption being deterministic over the NFC-encoded name (e.g. [AES-SIV-512-B64URL](file-name-encryption/AES-SIV-512-B64URL.md#encryption-of-node-names)): an application normalizes a name before encrypting it for a lookup, so a stored name in any other form decrypts fine but can never be looked up, created over, renamed or deleted by name. Listing it would expose an entry that no subsequent operation can reach. Conversely, applications need not distinguish normalization forms on input; all forms of a name denote the same node.
 
 ### Symlink Targets
 
